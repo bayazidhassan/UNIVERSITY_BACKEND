@@ -1,0 +1,105 @@
+import bcrypt from 'bcrypt';
+import { Schema, model } from 'mongoose';
+import config from '../../config';
+import { TUser, userModel } from './user_interface';
+
+//export const userSchema = new Schema<TUser>(
+export const userSchema = new Schema<TUser, userModel>( //for custom static method
+  {
+    id: {
+      type: String,
+      required: [true, 'User ID is required'],
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      select: 0,
+    },
+    needPasswordChange: {
+      type: Boolean,
+      default: true,
+    },
+    passwordChangedAt: {
+      type: Date,
+    },
+    role: {
+      type: String,
+      enum: ['student', 'faculty', 'admin'],
+      required: [true, 'User role is required'],
+    },
+    status: {
+      type: String,
+      enum: ['in_progress', 'block'],
+      default: 'in_progress',
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+//document middleware/hook
+userSchema.pre('save', async function (next) {
+  //here 'this' refers to the current document
+
+  if (!this.isModified('password')) {
+    return next();
+  }
+
+  const hashed = await bcrypt.hash(this.password, Number(config.bcrypt_salt));
+  this.password = hashed;
+  next();
+});
+
+//document middleware/hook
+userSchema.post('save', async function (doc, next) {
+  //here 'this' or 'doc' refers to the saved document
+
+  doc.password = '';
+  next();
+});
+
+//query middleware/hook
+userSchema.pre('find', async function (next) {
+  //this.where({ isDeleted: { $ne: true } });
+  //this.where({ status: { $eq: 'in_progress' } });
+  this.where({ isDeleted: { $ne: true }, status: { $eq: 'in_progress' } });
+  next();
+});
+
+userSchema.pre('findOne', async function (next) {
+  //this.where({ isDeleted: { $ne: true } });
+  //this.where({ status: { $eq: 'in_progress' } });
+  this.where({ isDeleted: { $ne: true }, status: { $eq: 'in_progress' } });
+  next();
+});
+
+userSchema.pre('findOneAndUpdate', async function (next) {
+  //this.where({ isDeleted: { $ne: true } });
+  //this.where({ status: { $eq: 'in_progress' } });
+  this.where({ isDeleted: { $ne: true }, status: { $eq: 'in_progress' } });
+  next();
+});
+
+//custom static method
+userSchema.static('isUserExists', async function (id: string) {
+  //return await User.findOne({ id: id }).select('+password');
+  return await User.findOne({ id }).select('+password'); //es6 style
+  //password-> just give password field
+  //+password-> give whole document with password field
+});
+
+userSchema.static(
+  'isPasswordMatched',
+  async function (password: string, hashPassword: string) {
+    return await bcrypt.compare(password, hashPassword);
+  },
+);
+
+//export const User = model<TUser>('User', userSchema);
+export const User = model<TUser, userModel>('User', userSchema); //for custom static method

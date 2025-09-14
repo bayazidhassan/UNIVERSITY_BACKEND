@@ -1,0 +1,248 @@
+import status from 'http-status';
+import QueryBuilder from '../../builder/QueryBuilder';
+import AppError from '../../errors/AppError';
+import { AcademicDepartment } from '../academicDepartment/academicDepartment_schema_model';
+import { AcademicFaculty } from '../academicFaculty/academicFaculty_schema_model';
+import { Course } from '../course/course_schema_model';
+import { Faculty } from '../faculty/faculty_schema_model';
+import { SemesterRegistration } from '../semesterRegistration/semesterRegistration_schema_model';
+import { TOfferedCourse, TSchedule } from './offeredCourse_Interface';
+import { OfferedCourse } from './offeredCourse_schema_model';
+import { checkTimeConflictForFaculty } from './offeredCourse_utils';
+
+const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
+  const {
+    semesterRegistration,
+    academicFaculty,
+    academicDepartment,
+    course,
+    faculty,
+    section,
+    days,
+    startTime,
+    endTime,
+  } = payload;
+
+  //check time validation
+  //const start = new Date(`1970-01-01T${payload.startTime}:00`);
+  //const end = new Date(`1970-01-01T${payload.endTime}:00`);
+  //if (start >= end) {
+
+  //Lexicographical comparison
+  if (startTime >= endTime) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      'The start time will never be greater than or equal to the end time.',
+    );
+  }
+
+  //check semester registration id is existed or not
+  const isSemesterRegistrationExists =
+    await SemesterRegistration.findById(semesterRegistration);
+  if (!isSemesterRegistrationExists) {
+    throw new AppError(status.NOT_FOUND, 'Semester registration is not found.');
+  }
+
+  //check academic faculty id is existed or not
+  const isAcademicFacultyExists =
+    await AcademicFaculty.findById(academicFaculty);
+  if (!isAcademicFacultyExists) {
+    throw new AppError(status.NOT_FOUND, 'Academic faculty is not found.');
+  }
+
+  //check academic department id is existed or not
+  const isAcademicDepartmentExists =
+    await AcademicDepartment.findById(academicDepartment);
+  if (!isAcademicDepartmentExists) {
+    throw new AppError(status.NOT_FOUND, 'Academic department is not found.');
+  }
+
+  //check course id is existed or not
+  const isCourseExists = await Course.findById(course);
+  if (!isCourseExists) {
+    throw new AppError(status.NOT_FOUND, 'Course is not found.');
+  }
+
+  //check faculty id is existed or not
+  const isFacultyExists = await Faculty.findById(faculty);
+  if (!isFacultyExists) {
+    throw new AppError(status.NOT_FOUND, 'Faculty is not found.');
+  }
+
+  //check the academic department is belong to that academic faculty or not
+  if (!isAcademicDepartmentExists.academicFaculty.equals(academicFaculty)) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      `${isAcademicDepartmentExists.name} does not belong to the ${isAcademicFacultyExists.name}.`,
+    );
+  }
+
+  //check if the same offered course in the same section in the same registration semester
+  const checkSameCourseSectionSemester = await OfferedCourse.findOne({
+    //es6 style
+    semesterRegistration,
+    course,
+    section,
+  });
+  if (checkSameCourseSectionSemester) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      'This course is already offered in the same section and the same registration semester.',
+    );
+  }
+
+  //resolve time conflict for a faculty
+  const assignedSchedules = await OfferedCourse.find(
+    //only filter for matching days
+    { semesterRegistration, faculty, days: { $in: days } }, //es6 style
+    { days: 1, startTime: 1, endTime: 1, _id: 0 },
+  );
+  const newSchedule: TSchedule = {
+    days,
+    startTime,
+    endTime,
+  };
+  if (checkTimeConflictForFaculty(assignedSchedules, newSchedule)) {
+    throw new AppError(
+      status.CONFLICT,
+      'This faculty is not available at this time. Choose another time or day.',
+    );
+  }
+
+  payload.academicSemester = isSemesterRegistrationExists.academicSemester;
+  const result = await OfferedCourse.create(payload);
+  if (!result) {
+    throw new AppError(status.BAD_REQUEST, 'Failed to create offered course.');
+  }
+  return result;
+};
+
+const getAllOfferedCoursesFromDB = async (query: Record<string, unknown>) => {
+  const offeredCourseSearchableFields = ['days', 'startTime', 'endTime'];
+  const offeredCourseQuery = new QueryBuilder(
+    OfferedCourse.find()
+      .populate('semesterRegistration')
+      .populate('academicSemester')
+      .populate('academicFaculty')
+      .populate('academicDepartment')
+      .populate('course')
+      .populate('faculty'),
+    query,
+  );
+  offeredCourseQuery.search(offeredCourseSearchableFields).filter().sort();
+  if (query?.page) {
+    offeredCourseQuery.paginate();
+  }
+  offeredCourseQuery.fieldsLimiting();
+
+  const result = await offeredCourseQuery.modelQuery;
+  if (!result.length) {
+    throw new AppError(status.NOT_FOUND, 'Offered courses are not found.');
+  }
+  return result;
+};
+
+const getSingleOfferedCourseFromDB = async (id: string) => {
+  const result = await OfferedCourse.findById(id)
+    .populate('semesterRegistration')
+    .populate('academicSemester')
+    .populate('academicFaculty')
+    .populate('academicDepartment')
+    .populate('course')
+    .populate('faculty');
+  if (!result) {
+    throw new AppError(status.NOT_FOUND, 'Offered course is not found.');
+  }
+  return result;
+};
+
+const updateOfferedCourseIntoDB = async (
+  id: string,
+  payload: Pick<TOfferedCourse, 'faculty' | 'days' | 'startTime' | 'endTime'>,
+) => {
+  const { faculty, days, startTime, endTime } = payload;
+
+  //check offered course id existed or not
+  const isOfferedCourseExists = await OfferedCourse.findById(id);
+  if (!isOfferedCourseExists) {
+    throw new AppError(status.NOT_FOUND, 'Offered course is not found.');
+  }
+
+  //The start time will never be greater than or equal to the end time.
+  //I have implemented this validation in the updateOfferedCourseZodSchema.
+
+  //check faculty id is existed or not
+  const isFacultyExists = await Faculty.findById(faculty);
+  if (!isFacultyExists) {
+    throw new AppError(status.NOT_FOUND, 'Faculty is not found.');
+  }
+
+  const semesterRegistration = isOfferedCourseExists.semesterRegistration;
+
+  //check status of semester registration
+  const checkStatus = await SemesterRegistration.findById(semesterRegistration);
+  if (checkStatus?.status !== 'UPCOMING') {
+    throw new AppError(
+      status.BAD_REQUEST,
+      `You can not update this ${checkStatus?.status} semester.`,
+    );
+  }
+
+  //resolve time conflict for a faculty
+  const assignedSchedules = await OfferedCourse.find(
+    //only filter for matching days
+    { semesterRegistration, faculty, days: { $in: days } }, //es6 style
+    { days: 1, startTime: 1, endTime: 1, _id: 0 },
+  );
+  const newSchedule: TSchedule = {
+    days,
+    startTime,
+    endTime,
+  };
+  if (checkTimeConflictForFaculty(assignedSchedules, newSchedule)) {
+    throw new AppError(
+      status.CONFLICT,
+      'This faculty is not available at this time. Choose another time or day.',
+    );
+  }
+
+  //now update data
+  const result = await OfferedCourse.findByIdAndUpdate(id, payload, {
+    new: true,
+    runValidators: true,
+  });
+  return result;
+};
+
+const deleteAOfferedCourseFromDB = async (id: string) => {
+  const isOfferedCourseExists = await OfferedCourse.findById(id);
+  if (!isOfferedCourseExists) {
+    throw new AppError(status.NOT_FOUND, 'Offered course not found.');
+  }
+
+  const semesterRegistration = isOfferedCourseExists.semesterRegistration;
+  const semesterRegistrationStatus =
+    await SemesterRegistration.findById(semesterRegistration);
+  if (semesterRegistrationStatus?.status !== 'UPCOMING') {
+    throw new AppError(
+      status.BAD_REQUEST,
+      'You can not delete any ONGOING or ENDED semester.',
+    );
+  }
+
+  const result = await OfferedCourse.findByIdAndDelete(id);
+  /*
+  if (!result) {
+    throw new AppError(status.NOT_FOUND, 'Offered course not found.');
+  }
+  */
+  return result;
+};
+
+export const offeredCourseService = {
+  createOfferedCourseIntoDB,
+  getAllOfferedCoursesFromDB,
+  getSingleOfferedCourseFromDB,
+  updateOfferedCourseIntoDB,
+  deleteAOfferedCourseFromDB,
+};
