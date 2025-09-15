@@ -14,3 +14,19 @@ export default {
   jwt_access_expire_in: process.env.JWT_ACCESS_EXPIRE_IN,
   jwt_refresh_expire_in: process.env.JWT_REFRESH_EXPIRE_IN,
 };
+
+/*
+1) import dotenv
+   - dotenv is a package that helps your project read secret values (like passwords, API keys, database links) from a .env file.
+
+2) import path
+   - path is a built-in Node.js module to work with file paths.
+
+3) dotenv.config({...})
+   - This tells dotenv to load the .env file.
+   - The file is found using path.join(process.cwd(), '.env'), which means:
+     👉 “look for .env in the project’s root folder”.
+
+4) export default { ... }
+   - This creates a configuration object that other files in your project can use.
+*/

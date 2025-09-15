@@ -6,10 +6,12 @@ import config from './app/config';
 /*
 async function main() {
   try {
+    const port = config.port;
+
     await mongoose.connect(config.database_url as string);
 
-    app.listen(config.port, () => {
-      console.log(`University Backend is listening on port ${config.port}`);
+    app.listen(port, () => {
+      console.log(`University Backend is listening on port ${port}`);
     });
   } catch (err) {
     console.log(err);
@@ -22,10 +24,12 @@ let server: Server;
 
 async function main() {
   try {
+    const port = config.port;
+
     await mongoose.connect(config.database_url as string);
 
-    server = app.listen(config.port, () => {
-      console.log(`University Backend is listening on port ${config.port}`);
+    server = app.listen(port, () => {
+      console.log(`University Backend is listening on port ${port}`);
     });
   } catch (err) {
     console.log(err);
