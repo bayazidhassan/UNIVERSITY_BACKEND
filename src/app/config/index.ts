@@ -29,4 +29,6 @@ export default {
 
 4) export default { ... }
    - This creates a configuration object that other files in your project can use.
+
+5) 👉 In short: This code loads secrets from .env and makes them available to your project in one neat object.
 */

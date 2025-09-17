@@ -6,9 +6,9 @@ import config from './app/config';
 /*
 async function main() {
   try {
-    const port = config.port;
+    const port = config.port || 5000;
 
-    await mongoose.connect(config.database_url as string);
+    await mongoose.connect(config.database_url as string); //use await if your database has auth enabled
 
     app.listen(port, () => {
       console.log(`University Backend is listening on port ${port}`);
@@ -24,9 +24,9 @@ let server: Server;
 
 async function main() {
   try {
-    const port = config.port;
+    const port = config.port || 5000;
 
-    await mongoose.connect(config.database_url as string);
+    await mongoose.connect(config.database_url as string); //use await if your database has auth enabled
 
     server = app.listen(port, () => {
       console.log(`University Backend is listening on port ${port}`);
