@@ -57,7 +57,7 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
     session.startTransaction();
 
     //create an user (transaction-1)
-    //const userResult = await User.create(validateUserData);
+    //const userResult = await User.create(validateUserData); //Note: The create() function fires save() hooks.
     const userResult = await User.create([validateUserData], { session });
     /*
     if (!userResult) {
@@ -74,7 +74,7 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
     studentData.user = userResult[0]._id;
 
     //create a student (transaction-2)
-    //const studentResult = await Student.create(studentData);
+    //const studentResult = await Student.create(studentData); //Note: The create() function fires save() hooks.
     const studentResult = await Student.create([studentData], { session });
     /*
     if (!studentResult) {

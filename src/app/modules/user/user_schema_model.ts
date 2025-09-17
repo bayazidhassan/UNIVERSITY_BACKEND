@@ -44,6 +44,7 @@ export const userSchema = new Schema<TUser, userModel>( //for custom static meth
 );
 
 //document middleware/hook
+//Note: The create() function fires save() hooks.
 userSchema.pre('save', async function (next) {
   //here 'this' refers to the current document
 
@@ -57,6 +58,7 @@ userSchema.pre('save', async function (next) {
 });
 
 //document middleware/hook
+//Note: The create() function fires save() hooks.
 userSchema.post('save', async function (doc, next) {
   //here 'this' or 'doc' refers to the saved document
 
