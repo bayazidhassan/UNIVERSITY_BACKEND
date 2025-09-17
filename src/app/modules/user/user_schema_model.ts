@@ -48,6 +48,13 @@ export const userSchema = new Schema<TUser, userModel>( //for custom static meth
 userSchema.pre('save', async function (next) {
   //here 'this' refers to the current document
 
+  /*
+  this.isModified('password') returns true only if the password field was changed (or newly set).
+  If the password has not been modified, then hashing again is unnecessary.
+  this.isModified('password') returns true only if the password field was changed (or newly set).
+  If the password has not been modified, then hashing again is unnecessary.
+  That check prevents double-hashing and ensures passwords are only hashed when they are actually changed.
+  */
   if (!this.isModified('password')) {
     return next();
   }
