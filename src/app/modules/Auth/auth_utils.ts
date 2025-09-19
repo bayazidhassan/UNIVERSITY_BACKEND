@@ -10,6 +10,11 @@ export const createToken = (
       data: jwt_payload,
     },
     secret,
-    { expiresIn },
+    //{ expiresIn: 60 * 60 },
+    //{ expiresIn: '1h' },
+    {
+      //expiresIn,
+      expiresIn: expiresIn,
+    },
   );
 };

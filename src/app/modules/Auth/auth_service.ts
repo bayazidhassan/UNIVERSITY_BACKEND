@@ -4,7 +4,6 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import config from '../../config';
 import AppError from '../../errors/AppError';
 import { JwtDecoded } from '../../interface/jwt_tokeData_interface';
-import { verifyToken } from '../../middlewares/auth';
 import { User } from '../user/user_schema_model';
 import { TLoginUser } from './auth_interface';
 import { createToken } from './auth_utils';
@@ -106,7 +105,14 @@ const changePasswordIntoDB = async (
 
 const refreshToken = async (token: string) => {
   //authentication(check token is valid or not)
-  const payload = await verifyToken(token, config.jwt_refresh_token as string);
+  /*
+  There is no problem if you don’t use await with jwt.verify in your code,
+  because jwt.verify (without a callback) is synchronous and immediately returns the decoded payload or throws an error, which your catchAsync function will handle.
+  */
+  const payload = jwt.verify(
+    token,
+    config.jwt_refresh_token as string,
+  ) as JwtDecoded;
 
   //check user is not found or deleted or blocked
   const isUserExists = await User.isUserExists(payload.data.userId); //custom static method
