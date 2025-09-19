@@ -58,7 +58,8 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
 
     //create an user (transaction-1)
     //const userResult = await User.create(validateUserData); //Note: The create() function fires save() hooks.
-    const userResult = await User.create([validateUserData], { session });
+    //But note: during create(), select: false doesn’t automatically hide password in the returned doc — you’ll still see it unless you convert the doc and strip it.
+    const userResult = await User.create([validateUserData], { session }); //Note: The create() function fires save() hooks.
     /*
     if (!userResult) {
       throw new Error('Failed to create user.');
@@ -67,6 +68,11 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
     if (!userResult.length) {
       throw new AppError(status.BAD_REQUEST, 'Failed to create user.');
     }
+    /*
+    //to do not send password field in the returned doc
+    const newUserResult: Partial<TUser> = userResult[0].toObject();
+    delete newUserResult.password;
+    */
 
     //studentData.id = userResult.id;
     //studentData.user = userResult._id;
@@ -75,7 +81,8 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
 
     //create a student (transaction-2)
     //const studentResult = await Student.create(studentData); //Note: The create() function fires save() hooks.
-    const studentResult = await Student.create([studentData], { session });
+    //But note: during create(), select: false doesn’t automatically hide password in the returned doc — you’ll still see it unless you convert the doc and strip it.
+    const studentResult = await Student.create([studentData], { session }); //Note: The create() function fires save() hooks.
     /*
     if (!studentResult) {
       throw new Error('Failed to create student.');

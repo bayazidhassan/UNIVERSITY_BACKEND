@@ -14,7 +14,7 @@ export const userSchema = new Schema<TUser, userModel>( //for custom static meth
     password: {
       type: String,
       required: [true, 'Password is required'],
-      select: 0,
+      select: false,
     },
     needPasswordChange: {
       type: Boolean,
@@ -66,12 +66,22 @@ userSchema.pre('save', async function (next) {
 
 //document middleware/hook
 //Note: The create() function fires save() hooks.
-userSchema.post('save', async function (doc, next) {
+/*
+You don’t need next() unless you specifically want to chain multiple post('save') hooks.
+Older versions of Mongoose required next in both pre and post hooks.
+Nowadays (Mongoose 5.x+ and 6.x+), you only need next in pre hooks.
+In post hooks, including next does nothing — Mongoose ignores it.
+*/
+/*
+//userSchema.post('save', async function (doc, next) {
+userSchema.post('save', async function (doc) {
   //here 'this' or 'doc' refers to the saved document
-
-  doc.password = '';
-  next();
+  
+  //doc.password = ''; //I have implemented a logic in the service page to do not send password field in the returned doc
+  
+  //next();
 });
+*/
 
 //query middleware/hook
 userSchema.pre('find', async function (next) {
