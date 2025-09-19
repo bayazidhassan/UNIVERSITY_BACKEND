@@ -17,6 +17,8 @@ const getAllStudent = catchAsync(async (req, res) => {
   });
 });
 
+//const getAStudent = async (req: Request, res: Response, next: NextFunction) => {
+//use express RequestHandler function type
 const getAStudent: RequestHandler = async (req, res, next) => {
   try {
     const id = req.params.studentId;
