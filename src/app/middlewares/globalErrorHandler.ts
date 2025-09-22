@@ -15,9 +15,9 @@ const globalErrorHandler: ErrorRequestHandler = (
   next, //eslint-disable-line @typescript-eslint/no-unused-vars
 ) => {
   //set default values
-  let statusCode = 500;
-  let message = 'Something went wrong!';
-  let errorSource: TErrorSource = [
+  let statusCode: number = 500;
+  let message: string = 'Something went wrong!';
+  let errorSource: TErrorSource[] = [
     {
       path: '',
       message: 'Something went wrong!',
@@ -69,8 +69,8 @@ const globalErrorHandler: ErrorRequestHandler = (
     success: false,
     message,
     errorSource,
-    //err,
-    stack: config.node_env === 'development' ? err?.stack : null,
+    //error: err.message,
+    stack: config.node_env === 'development' ? err.stack : undefined,
   });
 };
 

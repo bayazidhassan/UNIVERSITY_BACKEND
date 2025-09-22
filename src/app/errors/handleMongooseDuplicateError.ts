@@ -7,7 +7,7 @@ export const handleMongooseDuplicateError = (
   const match = err.message.match(/"([^"]*)"/);
   const extractedMessage = match && match[1];
 
-  const errorSource: TErrorSource = [
+  const errorSource: TErrorSource[] = [
     {
       path: '',
       message: `${extractedMessage} is already exists`,

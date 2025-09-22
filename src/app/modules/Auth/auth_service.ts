@@ -45,9 +45,9 @@ const loginUserIntoDB = async (payload: TLoginUser) => {
       data: jwt_payload,
     },
     config.jwt_access_token as string,
-    //{ expiresIn: 60 * 60 },
-    //{ expiresIn: '1h' },
     {
+      //expiresIn: 60 * 60,
+      //expiresIn: '1h',
       expiresIn: config.jwt_access_expire_in as SignOptions['expiresIn'],
     },
   );
@@ -142,9 +142,9 @@ const refreshToken = async (token: string) => {
       data: jwt_payload,
     },
     config.jwt_access_token as string,
-    //{ expiresIn: 60 * 60 },
-    //{ expiresIn: '1h' },
     {
+      //expiresIn: 60 * 60,
+      //expiresIn: '1h',
       expiresIn: config.jwt_access_expire_in as SignOptions['expiresIn'],
     },
   );
