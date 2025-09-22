@@ -8,12 +8,8 @@ import { handleMongooseDuplicateError } from '../errors/handleMongooseDuplicateE
 import { handleMongooseValidationError } from '../errors/handleMongooseValidationError';
 import { handleZodError } from '../errors/handleZodError';
 
-const globalErrorHandler: ErrorRequestHandler = (
-  err,
-  req,
-  res,
-  next, //eslint-disable-line @typescript-eslint/no-unused-vars
-) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
   //set default values
   let statusCode: number = 500;
   let message: string = 'Something went wrong!';

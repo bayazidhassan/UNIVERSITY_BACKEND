@@ -12,6 +12,7 @@ const facultySchema = new Schema<TFaculty, facultyModel>( //for custom static me
     id: {
       type: String,
       required: [true, 'ID is required.'],
+      unique: true,
     },
     user: {
       type: Schema.Types.ObjectId,

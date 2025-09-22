@@ -15,7 +15,6 @@ const semesterRegistrationSchema = new Schema<TSemesterRegistration>(
     academicSemester: {
       type: Schema.Types.ObjectId,
       required: [true, 'Academic semester is required.'],
-      //unique: [true, 'This academic semester is already existed.'],
       unique: true,
       ref: 'AcademicSemester', //reference model name
     },

@@ -12,6 +12,7 @@ const adminSchema = new Schema<TAdmin, adminModel>( //for  custom static method
     id: {
       type: String,
       required: [true, 'ID is required.'],
+      unique: true,
     },
     user: {
       type: Schema.Types.ObjectId,

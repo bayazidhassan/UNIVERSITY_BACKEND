@@ -49,7 +49,7 @@ const studentSchema = new Schema<TStudent, studentModel>( //for custom static me
     id: {
       type: String,
       required: [true, 'Student ID is required'],
-      //unique: [true, 'ID must be unique.'],
+      //unique: [true, 'ID must be unique.'], //wrong, With unique: [true, 'msg'], Mongoose’s internal transformer rewrites the error into a MongooseError, which hides err.code
       unique: true,
     },
     user: {

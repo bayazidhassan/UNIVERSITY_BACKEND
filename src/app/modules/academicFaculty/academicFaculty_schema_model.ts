@@ -5,7 +5,7 @@ const academicFacultySchema = new Schema<TAcademicFaculty>(
   {
     name: {
       type: String,
-      required: [true, 'Name is required.'],
+      required: [true, 'Academic faculty name is required.'],
       unique: true,
     },
   },

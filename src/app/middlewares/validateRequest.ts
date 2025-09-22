@@ -9,6 +9,11 @@ const validateRequest = (schema: ZodObject<ZodRawShape>) => {
       await schema.parseAsync(req.body);
       next();
     } catch (err) {
+      //res.status(500).json({
+      //success: false,
+      //message: 'Zod validation error.',
+      //error: (err as Error).message,
+      //});
       next(err);
     }
   };
