@@ -1,4 +1,6 @@
-import { model, Schema } from 'mongoose';
+import mongoose, { model, Schema } from 'mongoose';
+mongoose.Schema.Types.String.cast(false);
+mongoose.Schema.Types.Number.cast(false);
 import {
   studentModel,
   TBloodGroup,
