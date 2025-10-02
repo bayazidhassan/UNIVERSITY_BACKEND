@@ -47,7 +47,7 @@ const academicSemester_Schema = new Schema<TAcademicSemester>(
 );
 
 //I can also implement this logic in service
-academicSemester_Schema.pre('save', async function (next) {
+academicSemester_Schema.pre('save', async function () {
   const isSemesterExists = await AcademicSemester.findOne({
     semesterName: this.semesterName,
     year: this.year,
@@ -57,7 +57,6 @@ academicSemester_Schema.pre('save', async function (next) {
       `You have already created this semester: ${this.semesterName}, ${this.year}`,
     );
   }
-  next();
 });
 
 export const AcademicSemester = model<TAcademicSemester>(

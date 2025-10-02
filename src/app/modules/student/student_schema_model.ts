@@ -1,6 +1,4 @@
 import mongoose, { model, Schema } from 'mongoose';
-mongoose.Schema.Types.String.cast(false);
-mongoose.Schema.Types.Number.cast(false);
 import {
   studentModel,
   TBloodGroup,
@@ -9,6 +7,8 @@ import {
   TName,
   TStudent,
 } from './student_interface';
+mongoose.Schema.Types.String.cast(false);
+mongoose.Schema.Types.Number.cast(false);
 
 export const nameSchema = new Schema<TName>(
   {
@@ -125,8 +125,9 @@ const studentSchema = new Schema<TStudent, studentModel>( //for custom static me
   },
 );
 
+/*
 //query middleware/hook
-studentSchema.pre('find', async function (next) {
+studentSchema.pre('find', function (next) {
   //here 'this' refers to the current query
 
   //chaining with the current query, at first filter then find
@@ -136,8 +137,8 @@ studentSchema.pre('find', async function (next) {
   next();
 });
 
-//query middleware/hook
-studentSchema.pre('findOne', async function (next) {
+//There’s no findById middleware. Use findOne instead, since findById calls findOne internally.
+studentSchema.pre('findOne', function (next) {
   //here 'this' refers to the current query
 
   //chaining with the current query, at first filter then find
@@ -147,10 +148,22 @@ studentSchema.pre('findOne', async function (next) {
   next();
 });
 
-//query middleware/hook
-studentSchema.pre('findOneAndUpdate', async function (next) {
+studentSchema.pre('findOneAndUpdate', function (next) {
   //here 'this' refers to the current query
 
+  //chaining with the current query, at first filter then find
+  this.where({ isDeleted: { $ne: true } });
+  //this.where({ isDeleted: { $eq: false } });
+  next();
+});
+*/
+
+//query middleware/hook
+//There’s no findById middleware. Use findOne instead, since findById calls findOne internally.
+studentSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function (next) {
+  //here 'this' refers to the current query
+
+  //chaining with the current query, at first filter then find
   this.where({ isDeleted: { $ne: true } });
   //this.where({ isDeleted: { $eq: false } });
   next();

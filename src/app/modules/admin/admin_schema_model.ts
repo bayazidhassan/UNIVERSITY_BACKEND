@@ -71,7 +71,8 @@ const adminSchema = new Schema<TAdmin, adminModel>( //for  custom static method
   },
 );
 
-adminSchema.pre('find', async function (next) {
+/*
+adminSchema.pre('find', function (next) {
   //here this refers to the current query
 
   //chaining with the current query, at first filter then find
@@ -80,7 +81,7 @@ adminSchema.pre('find', async function (next) {
   next();
 });
 
-adminSchema.pre('findOne', async function (next) {
+adminSchema.pre('findOne', function (next) {
   //here this refers to the current query
 
   //chaining with the current query, at first filter then find
@@ -89,7 +90,17 @@ adminSchema.pre('findOne', async function (next) {
   next();
 });
 
-adminSchema.pre('findOneAndUpdate', async function (next) {
+adminSchema.pre('findOneAndUpdate', function (next) {
+  //here this refers to the current query
+
+  //chaining with the current query, at first filter then find
+  //this.where({ isDeleted: { $ne: true } });
+  this.where({ isDeleted: { $eq: false } });
+  next();
+});
+*/
+
+adminSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function (next) {
   //here this refers to the current query
 
   //chaining with the current query, at first filter then find

@@ -76,7 +76,8 @@ const facultySchema = new Schema<TFaculty, facultyModel>( //for custom static me
   },
 );
 
-facultySchema.pre('find', async function (next) {
+/*
+facultySchema.pre('find', function (next) {
   //here this refers to the current query
 
   //chaining with the current query, at first filter then find
@@ -85,7 +86,7 @@ facultySchema.pre('find', async function (next) {
   next();
 });
 
-facultySchema.pre('findOne', async function (next) {
+facultySchema.pre('findOne', function (next) {
   //here this refers to the current query
 
   //chaining with the current query, at first filter then find
@@ -94,7 +95,17 @@ facultySchema.pre('findOne', async function (next) {
   next();
 });
 
-facultySchema.pre('findOneAndUpdate', async function (next) {
+facultySchema.pre('findOneAndUpdate', function (next) {
+  //here this refers to the current query
+
+  //chaining with the current query, at first filter then find
+  //this.where({ isDeleted: { $ne: true } });
+  this.where({ isDeleted: { $eq: false } });
+  next();
+});
+*/
+
+facultySchema.pre(['find', 'findOne', 'findOneAndUpdate'], function (next) {
   //here this refers to the current query
 
   //chaining with the current query, at first filter then find

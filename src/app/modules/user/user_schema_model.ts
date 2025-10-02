@@ -61,7 +61,7 @@ userSchema.pre('save', async function (next) {
 
   const hashed = await bcrypt.hash(this.password, Number(config.bcrypt_salt));
   this.password = hashed;
-  next();
+  //next(); //If you use async → don’t use next(), If you use next() → don’t use async
 });
 
 //document middleware/hook
@@ -83,22 +83,31 @@ userSchema.post('save', async function (doc) {
 });
 */
 
+/*
 //query middleware/hook
-userSchema.pre('find', async function (next) {
+userSchema.pre('find', function (next) {
   //this.where({ isDeleted: { $ne: true } });
   //this.where({ status: { $eq: 'in_progress' } });
   this.where({ isDeleted: { $ne: true }, status: { $eq: 'in_progress' } });
   next();
 });
 
-userSchema.pre('findOne', async function (next) {
+userSchema.pre('findOne', function (next) {
   //this.where({ isDeleted: { $ne: true } });
   //this.where({ status: { $eq: 'in_progress' } });
   this.where({ isDeleted: { $ne: true }, status: { $eq: 'in_progress' } });
   next();
 });
 
-userSchema.pre('findOneAndUpdate', async function (next) {
+userSchema.pre('findOneAndUpdate', function (next) {
+  //this.where({ isDeleted: { $ne: true } });
+  //this.where({ status: { $eq: 'in_progress' } });
+  this.where({ isDeleted: { $ne: true }, status: { $eq: 'in_progress' } });
+  next();
+});
+*/
+
+userSchema.pre(['find', 'findOne', 'findOneAndUpdate'], function (next) {
   //this.where({ isDeleted: { $ne: true } });
   //this.where({ status: { $eq: 'in_progress' } });
   this.where({ isDeleted: { $ne: true }, status: { $eq: 'in_progress' } });

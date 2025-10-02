@@ -21,17 +21,16 @@ const academicDepartmentSchema = new Schema<TAcademicDepartment>(
 );
 
 //document middleware/hook
-academicDepartmentSchema.pre('save', async function (next) {
+academicDepartmentSchema.pre('save', async function () {
   //here 'this' refers to the current document
   const isExisted = await AcademicDepartment.findOne({ name: this.name });
   if (isExisted) {
     throw new Error(`${this.name} is already existed.`);
   }
-  next();
 });
 
 //query middleware/hook
-academicDepartmentSchema.pre('findOneAndUpdate', async function (next) {
+academicDepartmentSchema.pre('findOneAndUpdate', async function () {
   const query = this.getQuery();
   //console.log(query);
   const isExisted = await AcademicDepartment.findOne(query);
@@ -39,7 +38,6 @@ academicDepartmentSchema.pre('findOneAndUpdate', async function (next) {
     //throw new Error('Academic department is not found.');
     throw new AppError(404, 'Academic department is not found.');
   }
-  next();
 });
 
 export const AcademicDepartment = model<TAcademicDepartment>(
