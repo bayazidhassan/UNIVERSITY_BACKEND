@@ -1,10 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
 import { ZodObject, ZodRawShape } from 'zod';
 import catchAsync from '../utils/catchAsync';
 
 /*
-const validateRequest = (schema: ZodObject<ZodRawShape>) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+const validateRequest = (schema: ZodObject<ZodRawShape>): RequestHandler => {
+  //return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req, res, next) => {
     try {
       await schema.parseAsync(req.body);
       next();
@@ -21,7 +21,7 @@ const validateRequest = (schema: ZodObject<ZodRawShape>) => {
 */
 
 const validateRequest = (schema: ZodObject<ZodRawShape>) => {
-  return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  return catchAsync(async (req, res, next) => {
     //await schema.parseAsync(req.body);
 
     /*
