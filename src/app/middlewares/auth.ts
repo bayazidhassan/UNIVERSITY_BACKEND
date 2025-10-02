@@ -8,17 +8,6 @@ import { TUserRole } from '../modules/user/user_interface';
 import { User } from '../modules/user/user_schema_model';
 import catchAsync from '../utils/catchAsync';
 
-/*
-async function verifyToken(token: string, secret: string): Promise<JwtDecoded> {
-  return new Promise((resolve, reject) => {
-    jwt.verify(token, secret, (err, decoded) => {
-      if (err || !decoded || typeof decoded === 'string') return reject(err);
-      resolve(decoded as JwtDecoded); // Type assertion
-    });
-  });
-}
-*/
-
 //...requiredRoles (rest parameter, must be an array type)
 const auth = (...requiredRoles: TUserRole[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -29,11 +18,6 @@ const auth = (...requiredRoles: TUserRole[]) => {
     }
 
     //authentication(check token is valid or not)
-    //const payload = await verifyToken(token, config.jwt_access_token as string);
-    /*
-    There is no problem if you don’t use await with jwt.verify in your code,
-    because jwt.verify (without a callback) is synchronous and immediately returns the decoded payload or throws an error, which your catchAsync function will handle.
-    */
     const payload = jwt.verify(
       token,
       config.jwt_access_token as string,
