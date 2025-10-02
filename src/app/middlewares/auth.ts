@@ -17,13 +17,13 @@ const auth = (...requiredRoles: TUserRole[]) => {
     }
 
     //authentication(check token is valid or not)
-    const payload = jwt.verify(
+    const isVerified = jwt.verify(
       token,
       config.jwt_access_token as string,
     ) as JwtDecoded;
 
     //check user is not found or deleted or blocked
-    const isUserExists = await User.isUserExists(payload.data.userId); //custom static method
+    const isUserExists = await User.isUserExists(isVerified.data.userId); //custom static method
     if (!isUserExists) {
       throw new AppError(
         status.UNAUTHORIZED,
@@ -32,7 +32,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
     }
 
     //authorization(check valid user role for valid route)
-    if (requiredRoles.length && !requiredRoles.includes(payload.data.role)) {
+    if (requiredRoles.length && !requiredRoles.includes(isVerified.data.role)) {
       throw new AppError(
         status.UNAUTHORIZED,
         'You are not allowed to access this route.',
@@ -40,7 +40,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
     }
 
     //check password is changed or not
-    const iat_Date = new Date(payload.iat * 1000);
+    const iat_Date = new Date(isVerified.iat * 1000);
     const passwordChangeDate = isUserExists.passwordChangedAt
       ? new Date(isUserExists.passwordChangedAt)
       : null;
@@ -48,7 +48,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
       throw new AppError(status.UNAUTHORIZED, 'Invalid token.');
     }
 
-    req.user = payload;
+    req.user = isVerified;
     /*
     By default, TypeScript doesn’t know req.user exists.
     So if you try to assign it, TS will throw an error: Property 'user' does not exist on type 'Request'.
