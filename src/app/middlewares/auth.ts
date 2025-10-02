@@ -1,4 +1,3 @@
-import { NextFunction, Request, Response } from 'express';
 import status from 'http-status';
 import jwt from 'jsonwebtoken';
 import config from '../config';
@@ -10,7 +9,7 @@ import catchAsync from '../utils/catchAsync';
 
 //...requiredRoles (rest parameter, must be an array type)
 const auth = (...requiredRoles: TUserRole[]) => {
-  return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  return catchAsync(async (req, res, next) => {
     const token = req.headers.authorization;
     //check token is given or not
     if (!token) {
