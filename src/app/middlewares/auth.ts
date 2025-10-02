@@ -3,9 +3,9 @@ import jwt from 'jsonwebtoken';
 import config from '../config';
 import AppError from '../errors/AppError';
 import { JwtDecoded } from '../interface/jwt_tokeData_interface';
-import { TUserRole } from '../modules/user/user_interface';
 import { User } from '../modules/user/user_schema_model';
 import catchAsync from '../utils/catchAsync';
+import { TUserRole } from '../modules/user/user_interface';
 
 //...requiredRoles (rest parameter, must be an array type)
 const auth = (...requiredRoles: TUserRole[]) => {
