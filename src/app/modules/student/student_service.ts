@@ -19,7 +19,21 @@ const getAllStudentFromDB = async (query: Record<string, unknown>) => {
   */
 
   /*
-  const queryObj = { ...query }; //copy
+  //console.log(query) //[Object: null prototype] { email: 'bayazid1@gmail.com' }
+  //In Express, req.query (and sometimes the object you get from it) is not a plain JavaScript object.
+  //It’s created by querystring or URLSearchParams, which returns an object with no prototype (i.e., Object.create(null)).
+  //So internally, it looks like this:
+  //{
+    //__proto__: null,
+    //email: 'bayazid1@gmail.com'
+  //}
+  //That’s why Node prints:
+  //[Object: null prototype] { email: 'bayazid1@gmail.com' }
+  //It’s just letting you know it’s not a normal {} object with a prototype chain.
+  
+
+  const queryObj = { ...query }; //fixed the issue by spread operator
+  //console.log(queryObj) //{ email: 'bayazid1@gmail.com' }
 
   //for partial search
   const studentSearchableFields = [
