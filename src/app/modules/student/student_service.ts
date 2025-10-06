@@ -121,7 +121,7 @@ const getAllStudentFromDB = async (query: Record<string, unknown>) => {
   ];
 
   //const studentQuery = new QueryBuilder(Student.find(), query);
-  const studentQuery = new QueryBuilder(
+  const studentQuery = new QueryBuilder<TStudent>(
     Student.find()
       .populate('user')
       .populate('admissionSemester')

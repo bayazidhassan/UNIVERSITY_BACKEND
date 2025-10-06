@@ -1,10 +1,13 @@
-import { Query } from 'mongoose';
+import { HydratedDocument, Query } from 'mongoose';
 
 class QueryBuilder<T> {
-  public modelQuery: Query<T[], T>;
+  public modelQuery: Query<HydratedDocument<T>[], HydratedDocument<T>>;
   public query: Record<string, unknown>;
 
-  constructor(modelQuery: Query<T[], T>, query: Record<string, unknown>) {
+  constructor(
+    modelQuery: Query<HydratedDocument<T>[], HydratedDocument<T>>,
+    query: Record<string, unknown>,
+  ) {
     this.modelQuery = modelQuery;
     this.query = query;
   }
