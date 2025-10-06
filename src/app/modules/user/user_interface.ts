@@ -1,6 +1,7 @@
 import { Model } from 'mongoose';
 
 export type TUserRole = 'student' | 'faculty' | 'admin';
+export type TStatus = 'in_progress' | 'block';
 
 export type TUser = {
   id: string;
@@ -8,7 +9,7 @@ export type TUser = {
   needPasswordChange: boolean;
   passwordChangedAt?: Date;
   role: TUserRole;
-  status: 'in_progress' | 'block';
+  status: TStatus;
   isDeleted: boolean;
 };
 

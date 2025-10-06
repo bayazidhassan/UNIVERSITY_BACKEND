@@ -1,7 +1,10 @@
 import bcrypt from 'bcrypt';
 import { Schema, model } from 'mongoose';
 import config from '../../config';
-import { TUser, userModel } from './user_interface';
+import { TStatus, TUser, TUserRole, userModel } from './user_interface';
+
+const userRole: TUserRole[] = ['student', 'faculty', 'admin'];
+const status: TStatus[] = ['in_progress', 'block'];
 
 //export const userSchema = new Schema<TUser>(
 export const userSchema = new Schema<TUser, userModel>( //for custom static method
@@ -25,12 +28,20 @@ export const userSchema = new Schema<TUser, userModel>( //for custom static meth
     },
     role: {
       type: String,
-      enum: ['student', 'faculty', 'admin'],
+      //enum: ['student', 'faculty', 'admin'],
+      enum: {
+        values: userRole,
+        message: 'User role must be student, faculty or admin',
+      },
       required: [true, 'User role is required'],
     },
     status: {
       type: String,
-      enum: ['in_progress', 'block'],
+      //enum: ['in_progress', 'block'],
+      enum: {
+        values: status,
+        message: 'Status must be is_progress or block',
+      },
       default: 'in_progress',
     },
     isDeleted: {
