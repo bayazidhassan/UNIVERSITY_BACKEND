@@ -17,12 +17,29 @@ class QueryBuilder<T> {
     const searchTerm = this.query?.searchTerm;
 
     if (searchTerm) {
+      /*
+      When you use {} after the arrow, JavaScript treats it as a function body, not as an object literal.
+      That means your function doesn’t return anything — so each item in the array becomes undefined.
+
+      Wrapping the object in parentheses () tells JavaScript: “This is an object literal, not a block of code — return it implicitly.”
+      */
+      /*
       //model chaining
       this.modelQuery = this.modelQuery.find({
+        //Implicitly returns object
         $or: searchableFields.map((field) => ({
-          //check notes below to understand step by step
-          [field]: { $regex: searchTerm, $options: 'i' }, // { email: { $regex: query.searchTerm, $options: 'i' } } //$options: 'i' (case insensitive)
+          //read the notes below for understanding step by step
+          [field]: { $regex: searchTerm, $options: 'i' }, // { email: { $regex: searchTerm, $options: 'i' } } //$options: 'i' (case insensitive)
         })),
+      });
+      */
+      //model chaining
+      this.modelQuery = this.modelQuery.find({
+        //Explicitly returns object
+        $or: searchableFields.map((field) => {
+          //read the notes below for understanding step by step
+          return { [field]: { $regex: searchTerm, $options: 'i' } }; // { email: { $regex: searchTerm, $options: 'i' } } //$options: 'i' (case insensitive)
+        }),
       });
     }
 

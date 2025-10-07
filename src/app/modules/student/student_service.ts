@@ -49,10 +49,17 @@ const getAllStudentFromDB = async (query: Record<string, unknown>) => {
   if (query?.searchTerm) {
     searchTerm = query.searchTerm as string;
   }
+  //Implicitly returns object
   const searchQuery = Student.find({
     $or: studentSearchableFields.map((field) => ({
-      [field]: { $regex: searchTerm, $options: 'i' }, // { email: { $regex: query.searchTerm, $options: 'i' } } //$options: 'i' (case insensitive)
+      [field]: { $regex: searchTerm, $options: 'i' }, // { email: { $regex: searchTerm, $options: 'i' } } //$options: 'i' (case insensitive)
     })),
+  });
+  //Explicitly returns object
+  const searchQuery = Student.find({
+    $or: studentSearchableFields.map((field) => {
+      return { [field]: { $regex: searchTerm, $options: 'i' } }; // { email: { $regex: searchTerm, $options: 'i' } } //$options: 'i' (case insensitive)
+    }),
   });
 
   //for filter
