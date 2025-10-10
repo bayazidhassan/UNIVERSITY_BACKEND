@@ -14,6 +14,11 @@ export const userSchema = new Schema<TUser, userModel>( //for custom static meth
       required: [true, 'User ID is required'],
       unique: true,
     },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+    },
     password: {
       type: String,
       required: [true, 'Password is required'],

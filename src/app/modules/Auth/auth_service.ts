@@ -4,6 +4,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import config from '../../config';
 import AppError from '../../errors/AppError';
 import { JwtDecoded } from '../../interface/jwt_tokeData_interface';
+import { sendToEmail } from '../../utils/sendToEmail';
 import { User } from '../user/user_schema_model';
 import { TLoginUser } from './auth_interface';
 import { createToken } from './auth_utils';
@@ -103,7 +104,7 @@ const changePasswordIntoDB = async (
   return null;
 };
 
-const refreshToken = async (token: string) => {
+const refreshTokenIntoDB = async (token: string) => {
   //authentication(check token is valid or not)
   /*
   There is no problem if you don’t use await with jwt.verify in your code,
@@ -152,8 +153,76 @@ const refreshToken = async (token: string) => {
   return { jwt_accessToken };
 };
 
+const forgotPasswordIntoDB = async (id: string) => {
+  const isUserExists = await User.isUserExists(id); //custom static method
+  if (!isUserExists) {
+    throw new AppError(status.NOT_FOUND, 'User is not found.');
+  }
+
+  //create access token
+  const jwt_payload = {
+    userId: isUserExists.id,
+    role: isUserExists.role,
+  };
+  const password_resetToken = jwt.sign(
+    {
+      data: jwt_payload,
+    },
+    config.jwt_access_token as string,
+    {
+      //expiresIn: 60 * 60,
+      //expiresIn: '1h',
+      //expiresIn: config.jwt_access_expire_in as SignOptions['expiresIn'],
+      expiresIn: '10m',
+    },
+  );
+
+  //generate password reset link
+  const resetUILink = `${config.reset_password_ui_link}?id=${isUserExists.id}&token=${password_resetToken}`;
+  sendToEmail(isUserExists.email, resetUILink);
+};
+
+const resetPasswordIntoDB = async (
+  payload: { id: string; newPassword: string },
+  token: string,
+) => {
+  const isUserExists = await User.isUserExists(payload?.id); //custom static method
+  if (!isUserExists) {
+    throw new AppError(status.NOT_FOUND, 'User is not found.');
+  }
+
+  if (!token) {
+    throw new AppError(status.NOT_FOUND, 'Token not found.');
+  }
+  const decoded = jwt.verify(
+    token,
+    config.jwt_access_token as string,
+  ) as JwtDecoded;
+
+  if (decoded.data.userId !== payload.id) {
+    throw new AppError(status.UNAUTHORIZED, 'Your');
+  }
+
+  const hashedPassword = await bcrypt.hash(
+    payload.newPassword,
+    Number(config.bcrypt_salt),
+  );
+
+  await User.findOneAndUpdate(
+    { id: decoded.data.userId, role: decoded.data.role },
+    {
+      password: hashedPassword,
+      needPasswordChange: false,
+      passwordChangedAt: new Date(),
+    },
+    { new: true },
+  );
+};
+
 export const authService = {
   loginUserIntoDB,
   changePasswordIntoDB,
-  refreshToken,
+  refreshTokenIntoDB,
+  forgotPasswordIntoDB,
+  resetPasswordIntoDB,
 };

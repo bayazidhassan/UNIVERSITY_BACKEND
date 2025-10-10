@@ -5,6 +5,7 @@ export type TStatus = 'in_progress' | 'block';
 
 export type TUser = {
   id: string;
+  email: string;
   password: string;
   needPasswordChange: boolean;
   passwordChangedAt?: Date;
