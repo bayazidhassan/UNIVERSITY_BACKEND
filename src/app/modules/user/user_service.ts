@@ -2,6 +2,7 @@ import status from 'http-status';
 import mongoose from 'mongoose';
 import config from '../../config';
 import AppError from '../../errors/AppError';
+import { JwtDecoded } from '../../interface/jwt_tokeData_interface';
 import { AcademicSemester } from '../academicSemester/academicSemester_schema_model';
 import { TAdmin } from '../admin/admin_interface';
 import { Admin } from '../admin/admin_schema_model';
@@ -9,14 +10,14 @@ import { TFaculty } from '../faculty/faculty_interface';
 import { Faculty } from '../faculty/faculty_schema_model';
 import { TStudent } from '../student/student_interface';
 import { Student } from '../student/student_schema_model';
-import { TUser } from './user_interface';
+import { TStatus, TUser } from './user_interface';
 import { User } from './user_schema_model';
 import {
   generateAdminId,
   generateFacultyId,
   generateStudentId,
 } from './user_utils';
-import userZodSchema from './user_validation';
+import { userValidation } from './user_validation';
 
 const createStudentIntoDB = async (password: string, studentData: TStudent) => {
   /*
@@ -50,7 +51,8 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
   };
 
   //zod validation
-  const validateUserData = await userZodSchema.parseAsync(userData);
+  const validateUserData =
+    await userValidation.createUserZodSchema.parseAsync(userData);
 
   //implement transaction here
   const session = await mongoose.startSession();
@@ -121,7 +123,8 @@ const createFacultyIntoDB = async (password: string, facultyData: TFaculty) => {
     //isDeleted: default value,
   };
 
-  const validateUser = await userZodSchema.parseAsync(user);
+  const validateUser =
+    await userValidation.createUserZodSchema.parseAsync(user);
 
   const session = await mongoose.startSession();
   try {
@@ -168,7 +171,8 @@ const createAdminIntoDB = async (password: string, adminData: TAdmin) => {
     //isDeleted: default value,
   };
 
-  const validateUser = await userZodSchema.parseAsync(user);
+  const validateUser =
+    await userValidation.createUserZodSchema.parseAsync(user);
 
   const session = await mongoose.startSession();
   try {
@@ -203,8 +207,38 @@ const createAdminIntoDB = async (password: string, adminData: TAdmin) => {
   }
 };
 
+const getMeFromDB = async (payload: JwtDecoded) => {
+  let result = null;
+  if (payload.data.role === 'student') {
+    result = await Student.findOne({ id: payload.data.userId });
+  }
+  if (payload.data.role === 'faculty') {
+    result = await Faculty.findOne({ id: payload.data.userId });
+  }
+  if (payload.data.role === 'admin') {
+    result = await Admin.findOne({ id: payload.data.userId });
+  }
+  return result;
+};
+
+const changeStatusIntoDB = async (id: string, userStatus: TStatus) => {
+  const result = await User.findOneAndUpdate(
+    { id: id },
+    { status: userStatus },
+    {
+      new: true,
+    },
+  );
+  if (!result) {
+    throw new AppError(status.NOT_FOUND, 'User not found.');
+  }
+  return result;
+};
+
 export const userServices = {
   createStudentIntoDB,
   createFacultyIntoDB,
   createAdminIntoDB,
+  getMeFromDB,
+  changeStatusIntoDB,
 };

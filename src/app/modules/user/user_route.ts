@@ -6,6 +6,7 @@ import { facultyValidation } from '../faculty/faculty_validation';
 import { studentValidation } from '../student/student_validation';
 import { userControllers } from './user_controller';
 import { USER_ROLE } from './user_interface';
+import { userValidation } from './user_validation';
 
 const router = express.Router();
 
@@ -24,8 +25,22 @@ router.post(
 
 router.post(
   '/create_admin',
+  //auth(USER_ROLE.admin),
   validateRequest(adminValidation.createAdminZodSchema),
   userControllers.createAdmin,
+);
+
+router.get(
+  '/getMe',
+  auth(USER_ROLE.admin, USER_ROLE.faculty, USER_ROLE.student),
+  userControllers.getMe,
+);
+
+router.patch(
+  '/changeStatus/:id',
+  validateRequest(userValidation.userStatusChangeZodSchema),
+  auth(USER_ROLE.admin),
+  userControllers.changeStatus,
 );
 
 export const userRoutes = router;

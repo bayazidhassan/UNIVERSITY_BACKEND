@@ -1,6 +1,10 @@
 import * as z from 'zod';
+import { TStatus, TUserRole } from './user_interface';
 
-export const userZodSchema = z.object({
+const userRole: TUserRole[] = ['student', 'faculty', 'admin'];
+const status: TStatus[] = ['in_progress', 'block'];
+
+export const createUserZodSchema = z.object({
   id: z.string({
     error: (ctx) =>
       ctx.input === undefined
@@ -23,15 +27,27 @@ export const userZodSchema = z.object({
     .min(6, { message: 'Password must be at least 6 characters long.' })
     .max(15, { message: 'Password must not exceed 15 characters.' }),
   needsPasswordChange: z.boolean().default(true),
-  role: z.enum(['student', 'faculty', 'admin'], {
+  //role: z.enum(['student', 'faculty', 'admin'], {
+  role: z.enum(userRole, {
     error: () => 'Role must be one of: student, faculty, admin.',
   }),
   status: z
-    .enum(['in_progress', 'block'], {
+    .enum(status, {
       error: () => 'Status must be either in_progress or block.',
     })
     .default('in_progress'),
   isDeleted: z.boolean().default(false),
 });
 
-export default userZodSchema;
+const userStatusChangeZodSchema = z.object({
+  status: z
+    .enum(status, {
+      error: () => 'Status must be either in_progress or block.',
+    })
+    .default('in_progress'),
+});
+
+export const userValidation = {
+  createUserZodSchema,
+  userStatusChangeZodSchema,
+};
