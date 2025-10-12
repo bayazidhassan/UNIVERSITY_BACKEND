@@ -18,7 +18,7 @@ const changePasswordValidationZodSchema = z.object({
     error: (ctx) =>
       ctx.input === undefined
         ? 'Old password is required.'
-        : 'Old password must be a string.',
+        : 'Old password must be string.',
   }),
   new_password: z.string({
     error: (ctx) =>
@@ -33,7 +33,27 @@ const refreshTokenValidationZodSchema = z.object({
     error: (ctx) =>
       ctx.input === undefined
         ? 'Refresh token is required.'
-        : 'Refresh token must be a string.',
+        : 'Refresh token must be string.',
+  }),
+});
+
+const forgotPasswordValidationSchema = z.object({
+  id: z.string({
+    error: (ctx) =>
+      ctx.input === undefined ? 'Id is required.' : 'Id must be string.',
+  }),
+});
+
+const resetPasswordValidationSchema = z.object({
+  id: z.string({
+    error: (ctx) =>
+      ctx.input === undefined ? 'Id is required.' : 'Id must be string.',
+  }),
+  newPassword: z.string({
+    error: (ctx) =>
+      ctx.input === undefined
+        ? 'Password is required.'
+        : 'Password must be string.',
   }),
 });
 
@@ -41,4 +61,6 @@ export const authValidation = {
   loginValidationZodSchema,
   changePasswordValidationZodSchema,
   refreshTokenValidationZodSchema,
+  forgotPasswordValidationSchema,
+  resetPasswordValidationSchema,
 };

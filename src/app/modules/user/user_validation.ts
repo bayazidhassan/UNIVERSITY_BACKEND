@@ -7,6 +7,12 @@ export const userZodSchema = z.object({
         ? 'User ID is required.'
         : 'User ID must be a string.',
   }),
+  email: z.string({
+    error: (ctx) =>
+      ctx.input === undefined
+        ? 'Email is required.'
+        : 'Email must be a string.',
+  }),
   password: z
     .string({
       error: (ctx) =>
