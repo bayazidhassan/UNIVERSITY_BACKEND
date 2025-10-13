@@ -133,7 +133,8 @@ const createStudentZodSchema = z.object({
           : 'Password must be a string.',
     })
     .min(6, { message: 'Password must be at least 6 characters long.' })
-    .max(15, { message: 'Password must not exceed 15 characters.' }),
+    .max(15, { message: 'Password must not exceed 15 characters.' })
+    .optional(),
   student: z.object({
     name: nameZodSchema,
     gender: z.enum(gender, {
@@ -195,11 +196,14 @@ const createStudentZodSchema = z.object({
     }),
     guardian: guardianZodSchema,
     localGuardian: guardianZodSchema,
-    profileImg: z
-      .string({
-        error: () => 'Profile image must be a string.',
-      })
-      .optional(),
+    /*
+    profileImg: z.string({
+      error: (ctx) =>
+        ctx.input === undefined
+          ? 'Profile image link is required.'
+          : 'Profile image link must be a string.',
+    }),
+    */
     admissionSemester: z
       .string()
       .refine((val) => mongoose.Types.ObjectId.isValid(val), {
@@ -292,11 +296,16 @@ const updateStudentZodSchema = z.object({
       .optional(),
     guardian: updateGuardianZodSchema.optional(),
     localGuardian: updateGuardianZodSchema.optional(),
+    /*
     profileImg: z
       .string({
-        error: () => 'Profile image must be a string.',
+        error: (ctx) =>
+          ctx.input === undefined
+            ? 'Profile image link is required.'
+            : 'Profile image link must be a string.',
       })
       .optional(),
+    */
     admissionSemester: z
       .string()
       .refine((val) => mongoose.Types.ObjectId.isValid(val), {

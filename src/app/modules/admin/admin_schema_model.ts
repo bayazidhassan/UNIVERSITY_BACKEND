@@ -63,7 +63,10 @@ const adminSchema = new Schema<TAdmin, adminModel>( //for  custom static method
       type: String,
       required: [true, 'Permanent address is required'],
     },
-    profileImg: { type: String },
+    profileImg: {
+      type: String,
+      required: [true, 'Profile image is required'],
+    },
     isDeleted: { type: Boolean, default: false },
   },
   {

@@ -16,6 +16,9 @@ export default {
   reset_password_ui_link: process.env.RESET_PASSWORD_UI_LINK,
   app_email: process.env.APP_EMAIL,
   app_password: process.env.APP_PASSWORD,
+  cloudinary_cloud_name: process.env.Cloudinary_Cloud_Name,
+  cloudinary_api_key: process.env.Cloudinary_Api_Key,
+  cloudinary_api_secret: process.env.Cloudinary_Api_Secret,
 };
 
 /*

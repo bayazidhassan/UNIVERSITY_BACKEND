@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import config from '../../config';
 import AppError from '../../errors/AppError';
 import { JwtDecoded } from '../../interface/jwt_tokeData_interface';
+import { sendImageToCloudinary } from '../../utils/sendImageToCloudinary';
 import { AcademicSemester } from '../academicSemester/academicSemester_schema_model';
 import { TAdmin } from '../admin/admin_interface';
 import { Admin } from '../admin/admin_schema_model';
@@ -19,7 +20,11 @@ import {
 } from './user_utils';
 import { userValidation } from './user_validation';
 
-const createStudentIntoDB = async (password: string, studentData: TStudent) => {
+const createStudentIntoDB = async (
+  file: Express.Multer.File,
+  password: string,
+  studentData: TStudent,
+) => {
   /*
   //This logic is no longer needed here, because I have implemented transaction operation below to create an user and a student at a time
   //check student is already exist or not
@@ -71,16 +76,21 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
     if (!userResult.length) {
       throw new AppError(status.BAD_REQUEST, 'Failed to create user.');
     }
+
     /*
     //to do not send password field in the returned doc
     const newUserResult: Partial<TUser> = userResult[0].toObject();
     delete newUserResult.password;
     */
+    const imageTitle = `${studentData.name.firstName}-${validateUserData.id}`;
+    const path = file?.path;
+    const image_link = await sendImageToCloudinary(imageTitle, path);
 
     //studentData.id = userResult.id;
     //studentData.user = userResult._id;
     studentData.id = userResult[0].id;
     studentData.user = userResult[0]._id;
+    studentData.profileImg = image_link;
 
     //create a student (transaction-2)
     //const studentResult = await Student.create(studentData); //Note: The create() function fires save() hooks.

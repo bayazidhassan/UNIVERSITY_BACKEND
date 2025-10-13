@@ -107,7 +107,10 @@ const studentSchema = new Schema<TStudent, studentModel>( //for custom static me
       type: guardianSchema,
       required: [true, 'Local guardian info is required'],
     },
-    profileImg: { type: String },
+    profileImg: {
+      type: String,
+      required: [true, 'Profile image is required'],
+    },
     admissionSemester: {
       type: Schema.Types.ObjectId,
       required: [true, 'Academic semester reference is required'],

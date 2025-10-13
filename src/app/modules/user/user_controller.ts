@@ -10,8 +10,10 @@ import { userServices } from './user_service';
 const createStudent: RequestHandler = async (req, res, next) => {
   try {
     const { password, student: studentData } = req.body; //object destructuring with variable renaming (aliasing)
+    const file = req.file as Express.Multer.File;
 
     const result = await userServices.createStudentIntoDB(
+      file,
       password,
       studentData,
     );

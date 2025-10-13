@@ -15,7 +15,8 @@ const createFacultyZodSchema = z.object({
           : 'Password must be a string.',
     })
     .min(6, { message: 'Password must be at least 6 characters long.' })
-    .max(15, { message: 'Password must not exceed 15 characters.' }),
+    .max(15, { message: 'Password must not exceed 15 characters.' })
+    .optional(),
   faculty: z.object({
     designation: z.string({
       error: (ctx) =>
@@ -81,11 +82,12 @@ const createFacultyZodSchema = z.object({
           ? 'Permanent address is required.'
           : 'Permanent address must be a string.',
     }),
-    profileImg: z
-      .string({
-        error: () => 'Profile image must be a string.',
-      })
-      .optional(),
+    profileImg: z.string({
+      error: (ctx) =>
+        ctx.input === undefined
+          ? 'Profile image link is required.'
+          : 'Profile image link must be a string.',
+    }),
     academicDepartment: z
       .string()
       .refine((val) => mongoose.Types.ObjectId.isValid(val), {
@@ -180,7 +182,10 @@ const updateFacultyZodSchema = z.object({
       .optional(),
     profileImg: z
       .string({
-        error: () => 'Profile image must be a string.',
+        error: (ctx) =>
+          ctx.input === undefined
+            ? 'Profile image link is required.'
+            : 'Profile image link must be a string.',
       })
       .optional(),
     academicDepartment: z

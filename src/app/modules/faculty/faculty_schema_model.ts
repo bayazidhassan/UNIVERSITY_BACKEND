@@ -63,7 +63,10 @@ const facultySchema = new Schema<TFaculty, facultyModel>( //for custom static me
       type: String,
       required: [true, 'Permanent address is required'],
     },
-    profileImg: { type: String },
+    profileImg: {
+      type: String,
+      required: [true, 'Profile image is required'],
+    },
     academicDepartment: {
       type: Schema.Types.ObjectId,
       required: [true, 'Academic department reference is required'],
