@@ -77,7 +77,10 @@ const enrollCourseSchema = new Schema<TEnrolledCourse>(
       type: Boolean,
       default: false,
     },
-    courseMarks: courseMarksSchema,
+    courseMarks: {
+      type: courseMarksSchema,
+      default: {},
+    },
     grade: {
       type: String,
       enum: {
