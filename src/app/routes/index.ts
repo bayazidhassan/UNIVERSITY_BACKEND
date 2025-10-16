@@ -6,6 +6,7 @@ import { academicSemesterRoute } from '../modules/academicSemester/academicSemes
 import { adminRoute } from '../modules/admin/admin_route';
 import { authRoute } from '../modules/Auth/auth_route';
 import { courseRoute } from '../modules/course/course_route';
+import { enrolledCourseRoutes } from '../modules/enrolledCourse/enrolledCourse_router';
 import { facultyRoute } from '../modules/faculty/faculty_route';
 import { offeredCourseRoute } from '../modules/offeredCourse/offeredCourse_route';
 import { semesterRegistrationRoute } from '../modules/semesterRegistration/semesterRegistration_route';
@@ -52,5 +53,6 @@ router.use('/course', courseRoute);
 router.use('/semesterRegistration', semesterRegistrationRoute);
 router.use('/offeredCourse', offeredCourseRoute);
 router.use('/auth', authRoute);
+router.use('/enrolledCourse', enrolledCourseRoutes);
 
 export default router;
