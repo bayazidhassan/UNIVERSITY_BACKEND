@@ -20,7 +20,7 @@ const createEnrolledCourseIntoDB = async (
   }
 
   //check the student is already enrolled this offered course
-  const student = await Student.findOne({ id: userId });
+  const student = await Student.findOne({ id: userId }, { _id: 1 }); //Field filtering or projection → selecting only specific fields to return in a MongoDB query.
   const isStudentAlreadyEnrolled = await EnrolledCourse.findOne({
     //offeredCourse: offeredCourse,
     offeredCourse, //because key and value name are same
