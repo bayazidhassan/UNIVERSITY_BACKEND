@@ -1,6 +1,8 @@
 import status from 'http-status';
 import AppError from '../../errors/AppError';
+import { Course } from '../course/course_schema_model';
 import { OfferedCourse } from '../offeredCourse/offeredCourse_schema_model';
+import { SemesterRegistration } from '../semesterRegistration/semesterRegistration_schema_model';
 import { Student } from '../student/student_schema_model';
 import { EnrolledCourse } from './enrolledCourse_Model';
 
@@ -14,7 +16,7 @@ const createEnrolledCourseIntoDB = async (
     throw new AppError(status.NOT_FOUND, 'Offered is not existed.');
   }
 
-  //check offered course max capacity
+  //check the available seats of this offered course->max capacity
   if (isOfferedCourseExists.maxCapacity === 0) {
     throw new AppError(status.BAD_REQUEST, 'All seats are booked.');
   }
@@ -31,6 +33,93 @@ const createEnrolledCourseIntoDB = async (
       status.CONFLICT,
       'You have already enrolled this course.',
     );
+  }
+
+  //check a student's total enrolled courses credits+new offered course credits > maxCredit for a specific semester registration
+  /*
+  const total_enrolledCourse2 = await EnrolledCourse.aggregate([
+    {
+      $match: {
+        semesterRegistration: isOfferedCourseExists.semesterRegistration,
+        student: student?._id,
+      },
+    },
+    {
+      $lookup: {
+        from: 'courses',
+        localField: 'course',
+        foreignField: '_id',
+        as: 'alreadyEnrolledCourses',
+      },
+    },
+    {
+      $unwind: '$alreadyEnrolledCourses',
+    },
+    {
+      $group: {
+        _id: null,
+        totalEnrolledCredits: { $sum: '$alreadyEnrolledCourses.credits' },
+      },
+    },
+    {
+      $project: { _id: 0, totalEnrolledCredits: 1 },
+    },
+  ]);
+  const total_credits2 = total_enrolledCourse2.length
+    ? total_enrolledCourse2[0].totalEnrolledCredits
+    : 0;
+  const semesterRegistration2 = await SemesterRegistration.findById(
+    isOfferedCourseExists.semesterRegistration,
+    {
+      _id: 0,
+      maxCredit: 1,
+    },
+  );
+  const maxCredit2 = semesterRegistration2?.maxCredit ?? 0; //nullish coalescing operator
+  const course = await Course.findById(isOfferedCourseExists.course, {
+    _id: 0,
+    credits: 1,
+  });
+  if (total_credits2 + course?.credits > maxCredit2) {
+    throw new AppError(status.BAD_REQUEST, 'Credit limit exceeded.');
+  }
+  */
+  const total_enrolledCourse = (
+    await EnrolledCourse.find(
+      {
+        student: student?._id,
+        semesterRegistration: isOfferedCourseExists.semesterRegistration,
+      },
+      { _id: 0, course: 1 },
+    )
+  ).map((doc) => ({ course: doc.course })); //This creates a plain JavaScript array (not Mongoose documents) containing only the course field.
+  //.lean()) as { course: Types.ObjectId }[]; //you can also use this
+  /*
+  Mongoose find() returns Mongoose documents, which have lots of extra properties and methods (like .save(), .populate(), etc.).
+  Sometimes, you just want plain JS objects for clean data manipulation — like when you’re about to push, merge, or validate them manually.
+
+  So .map((doc) => ({ course: doc.course })) helps you:
+  Extract only the field(s) you care about
+  Avoid Mongoose document overhead
+  Make the array easy to work with for operations like push, filter, includes, etc.
+  */
+  total_enrolledCourse.push({ course: isOfferedCourseExists.course });
+  let total_credits = 0;
+  for (const el of total_enrolledCourse) {
+    //here we can not use forEach, because forEach does not wait for await.
+    const courseData = await Course.findById(el.course, { _id: 0, credits: 1 });
+    total_credits += courseData?.credits ?? 0; //The operator ?? is called the nullish coalescing operator -> “If the value on the left is null or undefined, then use the value on the right.”
+  }
+  const semesterRegistration = await SemesterRegistration.findById(
+    isOfferedCourseExists.semesterRegistration,
+    {
+      _id: 0,
+      maxCredit: 1,
+    },
+  );
+  const maxCredit = semesterRegistration?.maxCredit ?? 0; //nullish coalescing operator
+  if (total_credits > maxCredit) {
+    throw new AppError(status.BAD_REQUEST, 'Credit limit exceeded.');
   }
 
   //create enrolled course
