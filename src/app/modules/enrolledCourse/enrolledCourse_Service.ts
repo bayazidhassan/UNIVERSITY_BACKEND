@@ -8,6 +8,7 @@ import { SemesterRegistration } from '../semesterRegistration/semesterRegistrati
 import { Student } from '../student/student_schema_model';
 import { TEnrolledCourse } from './enrolledCourse_Interface';
 import { EnrolledCourse } from './enrolledCourse_Model';
+import { calculateGradeAndPoints } from './enrolledCourse_Utils';
 
 const createEnrolledCourseIntoDB = async (
   userId: string,
@@ -198,11 +199,22 @@ const updateEnrolledCourseMarksIntoDB = async (
 
   //update dynamically
   const modifiedData: Record<string, unknown> = {};
-
   if (courseMarks && Object.keys(courseMarks).length) {
     for (const [key, value] of Object.entries(courseMarks)) {
       modifiedData[`courseMarks.${key}`] = value;
     }
+  }
+
+  //if final marks is inputted
+  if (courseMarks?.finalTerm) {
+    const { classTest1, midTerm, classTest2 } =
+      isEnrolledCourseExists.courseMarks;
+    const total_Marks =
+      classTest1 + midTerm + classTest2 + courseMarks.finalTerm;
+    const result = calculateGradeAndPoints(total_Marks);
+    modifiedData.grade = result.grade;
+    modifiedData.gradePoints = result.gradePoints;
+    modifiedData.isCompleted = true;
   }
 
   const result = await EnrolledCourse.findByIdAndUpdate(

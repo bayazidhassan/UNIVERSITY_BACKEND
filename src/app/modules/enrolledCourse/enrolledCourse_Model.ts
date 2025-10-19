@@ -5,7 +5,7 @@ import {
   TGrade,
 } from './enrolledCourse_Interface';
 
-const grade: TGrade[] = ['A', 'B', 'C', 'D', 'F', 'NA'];
+const grade: TGrade[] = ['A+', 'A', 'B', 'C', 'D', 'E', 'F', 'NA'];
 
 const courseMarksSchema = new Schema<TEnrolledCourseMarks>(
   {
@@ -93,7 +93,7 @@ const enrollCourseSchema = new Schema<TEnrolledCourse>(
       type: String,
       enum: {
         values: grade,
-        message: 'Grade must be A, B, C, D, F or NA',
+        message: 'Grade must be A+, A, B, C, D, E, F or NA',
       },
       default: 'NA',
     },
