@@ -208,7 +208,7 @@ const updateEnrolledCourseMarksIntoDB = async (
   const result = await EnrolledCourse.findByIdAndUpdate(
     isEnrolledCourseExists._id,
     modifiedData,
-    { new: true },
+    { new: true, runValidators: true },
   );
   return result;
 };
