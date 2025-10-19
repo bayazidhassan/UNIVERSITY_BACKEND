@@ -1,9 +1,12 @@
 import status from 'http-status';
 import AppError from '../../errors/AppError';
+import { JwtDecoded } from '../../interface/jwt_tokeData_interface';
 import { Course } from '../course/course_schema_model';
+import { Faculty } from '../faculty/faculty_schema_model';
 import { OfferedCourse } from '../offeredCourse/offeredCourse_schema_model';
 import { SemesterRegistration } from '../semesterRegistration/semesterRegistration_schema_model';
 import { Student } from '../student/student_schema_model';
+import { TEnrolledCourse } from './enrolledCourse_Interface';
 import { EnrolledCourse } from './enrolledCourse_Model';
 
 const createEnrolledCourseIntoDB = async (
@@ -158,6 +161,59 @@ const createEnrolledCourseIntoDB = async (
 
   return result;
 };
+
+const updateEnrolledCourseMarksIntoDB = async (
+  user: JwtDecoded,
+  payload: Partial<TEnrolledCourse>,
+) => {
+  const { semesterRegistration, offeredCourse, student, courseMarks } = payload;
+
+  const isEnrolledCourseExists = await EnrolledCourse.findOne({
+    //semesterRegistration: semesterRegistration,
+    //offeredCourse: offeredCourse,
+    //student: student,
+    semesterRegistration,
+    offeredCourse,
+    student,
+  });
+  if (!isEnrolledCourseExists) {
+    throw new AppError(status.NOT_FOUND, 'Enrolled course not found.');
+  }
+
+  //check valid faculty to update marks
+  if (user.data.role === 'faculty') {
+    const facultyId = user.data.userId;
+
+    const faculty = await Faculty.findById(isEnrolledCourseExists.faculty, {
+      _id: 0,
+      id: 1,
+    });
+    if (faculty && facultyId !== faculty.id) {
+      throw new AppError(
+        status.UNAUTHORIZED,
+        'You are not valid faculty to update result.',
+      );
+    }
+  }
+
+  //update dynamically
+  const modifiedData: Record<string, unknown> = {};
+
+  if (courseMarks && Object.keys(courseMarks).length) {
+    for (const [key, value] of Object.entries(courseMarks)) {
+      modifiedData[`courseMarks.${key}`] = value;
+    }
+  }
+
+  const result = await EnrolledCourse.findByIdAndUpdate(
+    isEnrolledCourseExists._id,
+    modifiedData,
+    { new: true },
+  );
+  return result;
+};
+
 export const enrolledCourseService = {
   createEnrolledCourseIntoDB,
+  updateEnrolledCourseMarksIntoDB,
 };

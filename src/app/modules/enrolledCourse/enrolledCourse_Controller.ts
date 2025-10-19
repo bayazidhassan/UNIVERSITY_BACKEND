@@ -1,4 +1,5 @@
 import status from 'http-status';
+import { JwtDecoded } from '../../interface/jwt_tokeData_interface';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { enrolledCourseService } from './enrolledCourse_Service';
@@ -18,6 +19,21 @@ const createEnrolledCourse = catchAsync(async (req, res) => {
   });
 });
 
+const updateEnrolledCourseMarks = catchAsync(async (req, res) => {
+  const user = req.user as JwtDecoded;
+  const result = await enrolledCourseService.updateEnrolledCourseMarksIntoDB(
+    user,
+    req.body,
+  );
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: 'Course marks are updated successfully.',
+    data: result,
+  });
+});
+
 export const enrolledCourseController = {
   createEnrolledCourse,
+  updateEnrolledCourseMarks,
 };

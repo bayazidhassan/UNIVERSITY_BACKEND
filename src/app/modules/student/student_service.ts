@@ -224,6 +224,13 @@ const updateAStudentIntoDB = async (
   */
 
   //non-primitive nested update without mutating
+  /*
+  if (name && Object.keys(name).length) {
+    for (const [key, value] of Object.entries(name)) {
+      modifiedStudentData[`name.${key}`] = value;
+    }
+  }
+  */
   if (name) {
     updateDynamically('name', name, modifiedStudentData);
   }
