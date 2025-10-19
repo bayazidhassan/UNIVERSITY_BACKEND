@@ -22,7 +22,10 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
   return result;
   */
 
-  const courseSearchableFields = ['title', 'prefix', 'code'];
+  //const courseSearchableFields = ['title', 'prefix', 'code'];
+  //Regex will not work for numbers, nested arrays, or null values. Here 'code' is a number
+
+  const courseSearchableFields = ['title', 'prefix'];
 
   const courseQuery = new QueryBuilder(
     Course.find().populate('preRequisiteCourses.course'),

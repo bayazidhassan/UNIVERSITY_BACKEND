@@ -127,7 +127,7 @@ const getAllStudentFromDB = async (query: Record<string, unknown>) => {
     'localGuardian.name',
   ];
 
-  //const studentQuery = new QueryBuilder(Student.find(), query);
+  //const studentQuery = new QueryBuilder<TStudent>(Student.find(), query);
   const studentQuery = new QueryBuilder<TStudent>(
     Student.find()
       .populate('user')
@@ -158,13 +158,20 @@ const getAllStudentFromDB = async (query: Record<string, unknown>) => {
       },
     });
   */
+
   const result = await studentQuery.modelQuery;
+
+  const meta = await studentQuery.countTotal();
 
   //if (result.length === 0) {
   if (!result.length) {
     throw new AppError(status.NOT_FOUND, 'Students are not found');
   }
-  return result;
+
+  return {
+    meta,
+    result,
+  };
 };
 
 const getAStudentFromDB = async (id: string) => {
