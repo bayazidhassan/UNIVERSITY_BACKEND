@@ -197,7 +197,7 @@ const updateEnrolledCourseMarksIntoDB = async (
   }
 
   //update dynamically
-  const modifiedData: Record<string, unknown> = { ...courseMarks };
+  const modifiedData: Record<string, unknown> = {};
 
   if (courseMarks && Object.keys(courseMarks).length) {
     for (const [key, value] of Object.entries(courseMarks)) {
@@ -205,7 +205,7 @@ const updateEnrolledCourseMarksIntoDB = async (
     }
   }
 
-  const result = await EnrolledCourse.findById(
+  const result = await EnrolledCourse.findByIdAndUpdate(
     isEnrolledCourseExists._id,
     modifiedData,
     { new: true },
