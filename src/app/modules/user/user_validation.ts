@@ -1,7 +1,7 @@
 import * as z from 'zod';
 import { TStatus, TUserRole } from './user_interface';
 
-const userRole: TUserRole[] = ['student', 'faculty', 'admin'];
+const userRole: TUserRole[] = ['student', 'faculty', 'admin', 'super_admin'];
 const status: TStatus[] = ['in_progress', 'block'];
 
 export const createUserZodSchema = z.object({
@@ -27,9 +27,9 @@ export const createUserZodSchema = z.object({
     .min(6, { message: 'Password must be at least 6 characters long.' })
     .max(15, { message: 'Password must not exceed 15 characters.' }),
   needsPasswordChange: z.boolean().default(true),
-  //role: z.enum(['student', 'faculty', 'admin'], {
+  //role: z.enum(['student', 'faculty', 'admin', 'super_admin'], {
   role: z.enum(userRole, {
-    error: () => 'Role must be one of: student, faculty, admin.',
+    error: () => 'User role must be student, faculty, admin or super_admin',
   }),
   status: z
     .enum(status, {

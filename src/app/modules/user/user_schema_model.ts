@@ -3,7 +3,7 @@ import { Schema, model } from 'mongoose';
 import config from '../../config';
 import { TStatus, TUser, TUserRole, userModel } from './user_interface';
 
-const userRole: TUserRole[] = ['student', 'faculty', 'admin'];
+const userRole: TUserRole[] = ['student', 'faculty', 'admin', 'super_admin'];
 const status: TStatus[] = ['in_progress', 'block'];
 
 //export const userSchema = new Schema<TUser>(
@@ -33,10 +33,10 @@ export const userSchema = new Schema<TUser, userModel>( //for custom static meth
     },
     role: {
       type: String,
-      //enum: ['student', 'faculty', 'admin'],
+      //enum: ['student', 'faculty', 'admin', 'super_admin'],
       enum: {
         values: userRole,
-        message: 'User role must be student, faculty or admin',
+        message: 'User role must be student, faculty, admin or super_admin',
       },
       required: [true, 'User role is required'],
     },

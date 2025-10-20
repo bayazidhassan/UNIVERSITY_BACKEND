@@ -1,6 +1,6 @@
 import { Model } from 'mongoose';
 
-export type TUserRole = 'student' | 'faculty' | 'admin';
+export type TUserRole = 'student' | 'faculty' | 'admin' | 'super_admin';
 export type TStatus = 'in_progress' | 'block';
 
 export type TUser = {
@@ -18,6 +18,7 @@ export const USER_ROLE = {
   student: 'student',
   faculty: 'faculty',
   admin: 'admin',
+  super_admin: 'super_admin',
 } as const;
 
 //for custom static method

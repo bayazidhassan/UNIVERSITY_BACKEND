@@ -2,6 +2,7 @@ import { Server } from 'http';
 import mongoose from 'mongoose';
 import app from './app';
 import config from './app/config';
+import { seedSuperAdmin } from './app/DB';
 
 /*
 async function main() {
@@ -9,6 +10,8 @@ async function main() {
     const port = config.port || 5000;
 
     await mongoose.connect(config.database_url as string); //use await if your database has auth enabled
+
+    seedSuperAdmin(); //seed super admin
 
     app.listen(port, () => {
       console.log(`University Backend is listening on port ${port}`);
@@ -27,6 +30,8 @@ async function main() {
     const port = config.port || 5000;
 
     await mongoose.connect(config.database_url as string); //use await if your database has auth enabled
+
+    seedSuperAdmin(); //seed super admin
 
     server = app.listen(port, () => {
       console.log(`University Backend is listening on port ${port}`);
