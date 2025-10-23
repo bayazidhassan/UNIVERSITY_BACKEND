@@ -4,6 +4,7 @@ import config from '../../config';
 import AppError from '../../errors/AppError';
 import { JwtDecoded } from '../../interface/jwt_tokeData_interface';
 import { sendImageToCloudinary } from '../../utils/sendImageToCloudinary';
+import { AcademicDepartment } from '../academicDepartment/academicDepartment_schema_model';
 import { AcademicSemester } from '../academicSemester/academicSemester_schema_model';
 import { TAdmin } from '../admin/admin_interface';
 import { Admin } from '../admin/admin_schema_model';
@@ -59,6 +60,21 @@ const createStudentIntoDB = async (
   const validateUserData =
     await userValidation.createUserZodSchema.parseAsync(userData);
 
+  //check academic semester
+  const isAcademicSemesterExists = await AcademicSemester.findById(
+    studentData.admissionSemester,
+  );
+  if (!isAcademicSemesterExists) {
+    throw new AppError(status.NOT_FOUND, 'Academic semester not found.');
+  }
+  //check academic department
+  const isAcademicDepartmentExists = await AcademicDepartment.findById(
+    studentData.academicDepartment,
+  );
+  if (!isAcademicDepartmentExists) {
+    throw new AppError(status.NOT_FOUND, 'Academic department not found.');
+  }
+
   //implement transaction here
   const session = await mongoose.startSession();
   try {
@@ -91,6 +107,7 @@ const createStudentIntoDB = async (
     studentData.id = userResult[0].id;
     studentData.user = userResult[0]._id;
     studentData.profileImg = image_link;
+    studentData.academicFaculty = isAcademicDepartmentExists.academicFaculty;
 
     //create a student (transaction-2)
     //const studentResult = await Student.create(studentData); //Note: The create() function fires save() hooks.

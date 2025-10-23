@@ -121,6 +121,11 @@ const studentSchema = new Schema<TStudent, studentModel>( //for custom static me
       required: [true, 'Academic department reference is required'],
       ref: 'AcademicDepartment', //model name, for populate referencing
     },
+    academicFaculty: {
+      type: Schema.Types.ObjectId,
+      required: [true, 'Academic faculty reference is required'],
+      ref: 'AcademicFaculty', //model name, for populate referencing
+    },
     isDeleted: { type: Boolean, default: false },
   },
   {
