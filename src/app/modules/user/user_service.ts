@@ -98,15 +98,19 @@ const createStudentIntoDB = async (
     const newUserResult: Partial<TUser> = userResult[0].toObject();
     delete newUserResult.password;
     */
-    const imageTitle = `${studentData.name.firstName}-${validateUserData.id}`;
-    const path = file?.path;
-    const image_link = await sendImageToCloudinary(imageTitle, path);
+
+    //upload image to cloudinary
+    if (file) {
+      const imageTitle = `${studentData.name.firstName}-${validateUserData.id}`;
+      const path = file?.path;
+      const image_link = await sendImageToCloudinary(imageTitle, path);
+      studentData.profileImg = image_link;
+    }
 
     //studentData.id = userResult.id;
     //studentData.user = userResult._id;
     studentData.id = userResult[0].id;
     studentData.user = userResult[0]._id;
-    studentData.profileImg = image_link;
     studentData.academicFaculty = isAcademicDepartmentExists.academicFaculty;
 
     //create a student (transaction-2)
