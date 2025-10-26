@@ -158,8 +158,17 @@ const createFacultyIntoDB = async (
     //isDeleted: default value,
   };
 
+  //zod validation
   const validateUser =
     await userValidation.createUserZodSchema.parseAsync(user);
+
+  //check academic department
+  const isAcademicDepartmentExists = await AcademicDepartment.findById(
+    facultyData.academicDepartment,
+  );
+  if (!isAcademicDepartmentExists) {
+    throw new AppError(status.NOT_FOUND, 'Academic department not found.');
+  }
 
   const session = await mongoose.startSession();
   try {
@@ -217,6 +226,7 @@ const createAdminIntoDB = async (
     //isDeleted: default value,
   };
 
+  //zod validation
   const validateUser =
     await userValidation.createUserZodSchema.parseAsync(user);
 

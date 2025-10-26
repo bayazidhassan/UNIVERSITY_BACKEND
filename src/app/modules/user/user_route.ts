@@ -25,6 +25,12 @@ router.post(
 );
 router.post(
   '/create_faculty',
+  upload.single('profile_image'), //postman-> form-data: field's key name (profile_image)
+  (req: Request, res: Response, next: NextFunction) => {
+    //to convert text data to json data
+    req.body = JSON.parse(req.body.data); //postman-> form-data: field's key name (data)
+    next();
+  },
   auth(USER_ROLE.admin, USER_ROLE.super_admin),
   validateRequest(facultyValidation.createFacultyZodSchema),
   userControllers.createFaculty,
@@ -32,6 +38,12 @@ router.post(
 
 router.post(
   '/create_admin',
+  upload.single('profile_image'), //postman-> form-data: field's key name (profile_image)
+  (req: Request, res: Response, next: NextFunction) => {
+    //to convert text data to json data
+    req.body = JSON.parse(req.body.data); //postman-> form-data: field's key name (data)
+    next();
+  },
   auth(USER_ROLE.super_admin),
   validateRequest(adminValidation.createAdminZodSchema),
   userControllers.createAdmin,

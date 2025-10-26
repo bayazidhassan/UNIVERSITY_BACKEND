@@ -82,14 +82,14 @@ const createFacultyZodSchema = z.object({
           ? 'Permanent address is required.'
           : 'Permanent address must be a string.',
     }),
-
+    /*
     profileImg: z.string({
       error: (ctx) =>
         ctx.input === undefined
           ? 'Profile image link is required bayazid.'
           : 'Profile image link must be a string.',
     }),
-
+    */
     academicDepartment: z
       .string()
       .refine((val) => mongoose.Types.ObjectId.isValid(val), {
