@@ -12,8 +12,26 @@ router.post(
   validateRequest(offeredCourseValidation.createOfferedCourseZodSchema),
   offeredCourseController.createOfferedCourse,
 );
-router.get('/', offeredCourseController.getAllOfferedCourses);
-router.get('/:id', offeredCourseController.getSingleOfferedCourse);
+router.get(
+  '/',
+  auth(USER_ROLE.super_admin, USER_ROLE.admin, USER_ROLE.faculty),
+  offeredCourseController.getAllOfferedCourses,
+);
+router.get(
+  '/getMyOfferedCourses',
+  auth(USER_ROLE.student),
+  offeredCourseController.getMyOfferedCourses,
+);
+router.get(
+  '/:id',
+  auth(
+    USER_ROLE.super_admin,
+    USER_ROLE.admin,
+    USER_ROLE.faculty,
+    USER_ROLE.student,
+  ),
+  offeredCourseController.getSingleOfferedCourse,
+);
 router.patch(
   '/:id',
   auth(USER_ROLE.super_admin, USER_ROLE.admin),

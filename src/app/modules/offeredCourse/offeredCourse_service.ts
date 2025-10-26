@@ -6,6 +6,7 @@ import { AcademicFaculty } from '../academicFaculty/academicFaculty_schema_model
 import { Course } from '../course/course_schema_model';
 import { Faculty } from '../faculty/faculty_schema_model';
 import { SemesterRegistration } from '../semesterRegistration/semesterRegistration_schema_model';
+import { Student } from '../student/student_schema_model';
 import { TOfferedCourse, TSchedule } from './offeredCourse_Interface';
 import { OfferedCourse } from './offeredCourse_schema_model';
 import { checkTimeConflictForFaculty } from './offeredCourse_utils';
@@ -136,6 +137,111 @@ const getAllOfferedCoursesFromDB = async (query: Record<string, unknown>) => {
   offeredCourseQuery.fieldsLimiting();
 
   const result = await offeredCourseQuery.modelQuery;
+  const meta = await offeredCourseQuery.countTotal();
+  if (!result.length) {
+    throw new AppError(status.NOT_FOUND, 'Offered courses are not found.');
+  }
+  //return result;
+  return {
+    result,
+    meta,
+  };
+};
+
+const getMyOfferedCoursesFromDB = async (userId: string) => {
+  const isStudentExists = await Student.findOne({ id: userId });
+  if (!isStudentExists) {
+    throw new AppError(status.NOT_FOUND, 'Student is not found.');
+  }
+
+  //find current ongoing semester
+  const currentOngoingRegistrationSemester = await SemesterRegistration.findOne(
+    {
+      status: 'ONGOING',
+    },
+  );
+  if (!currentOngoingRegistrationSemester) {
+    throw new AppError(status.NOT_FOUND, 'There is no ongoing semester.');
+  }
+
+  const result = await OfferedCourse.aggregate([
+    //stage:1 - get offered courses for my department in current ongoing semester
+    {
+      $match: {
+        semesterRegistration: currentOngoingRegistrationSemester._id,
+        academicFaculty: isStudentExists.academicFaculty,
+        academicDepartment: isStudentExists.academicDepartment,
+      },
+    },
+    //stage:2 - populate course data
+    {
+      //lookup->populate
+      $lookup: {
+        from: 'courses', //collection name (lowercase plural)
+        localField: 'course', // field in OfferedCourse
+        foreignField: '_id', //field in Course
+        as: 'course', //output array name
+      },
+    },
+    //stage:3 - break the course array [as: 'course' -> it returns an array]
+    {
+      //unwind->break array
+      $unwind: '$course',
+    },
+    //stage:4 - get my enrolled courses
+    {
+      $lookup: {
+        from: 'enrolledcourses', //collection name (lowercase plural)
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: [
+                      '$semesterRegistration',
+                      currentOngoingRegistrationSemester._id,
+                    ],
+                  },
+                  {
+                    $eq: ['$student', isStudentExists._id],
+                  },
+                  {
+                    $eq: ['$isEnrolled', true],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: 'enrolledCourses', //it creates an array
+      },
+    },
+    //stage:5 - compare all offered courses with enrolled courses
+    {
+      $addFields: {
+        isAlreadyEnrolled: {
+          $in: [
+            '$course._id',
+            {
+              $map: {
+                input: '$enrolledCourses', //as: 'enrolledCourses'
+                as: 'enroll',
+                in: '$$enroll.course',
+              },
+            },
+          ],
+        },
+      },
+    },
+    //stage:6 - check isAlreadyEnrolled is equal to false
+    {
+      $match: {
+        isAlreadyEnrolled: false,
+      },
+    },
+  ]);
+
   if (!result.length) {
     throw new AppError(status.NOT_FOUND, 'Offered courses are not found.');
   }
@@ -242,6 +348,7 @@ const deleteAOfferedCourseFromDB = async (id: string) => {
 export const offeredCourseService = {
   createOfferedCourseIntoDB,
   getAllOfferedCoursesFromDB,
+  getMyOfferedCoursesFromDB,
   getSingleOfferedCourseFromDB,
   updateOfferedCourseIntoDB,
   deleteAOfferedCourseFromDB,
