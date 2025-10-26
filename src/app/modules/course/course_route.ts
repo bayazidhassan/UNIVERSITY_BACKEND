@@ -31,11 +31,15 @@ router.put(
   validateRequest(courseValidation.courseFacultiesZodSchema),
   courseController.assignCourseFaculties,
 );
+router.get(
+  '/:courseId/getCourseFaculties',
+  courseController.getCourseFaculties,
+);
 router.delete(
   '/:courseId/deleteCourseFaculties',
   auth(USER_ROLE.super_admin, USER_ROLE.admin),
   validateRequest(courseValidation.courseFacultiesZodSchema),
-  courseController.deleteCourseFaculties,
+  courseController.removeCourseFaculties,
 );
 
 export const courseRoute = router;

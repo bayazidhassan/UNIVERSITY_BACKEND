@@ -188,7 +188,17 @@ const assignCourseFacultiesIntoDB = async (
   return result;
 };
 
-const deleteCourseFacultiesFromDB = async (
+const getCourseFacultiesFromDB = async (courseId: string) => {
+  const result = await CourseFaculties.findOne({ course: courseId })
+    .populate('course')
+    .populate('faculties');
+  if (!result) {
+    throw new AppError(status.NOT_FOUND, 'Not found.');
+  }
+  return result;
+};
+
+const removeCourseFacultiesFromDB = async (
   courseId: string,
   facultiesData: Partial<TCourseFaculties>,
 ) => {
@@ -203,7 +213,7 @@ const deleteCourseFacultiesFromDB = async (
     },
   );
   if (!result) {
-    throw new AppError(status.NOT_FOUND, 'Failed to delete faculties.');
+    throw new AppError(status.NOT_FOUND, 'Failed to remove faculties.');
   }
   return result;
 };
@@ -215,5 +225,6 @@ export const courseService = {
   updateACourseIntoDB,
   deleteACourseFromDB,
   assignCourseFacultiesIntoDB,
-  deleteCourseFacultiesFromDB,
+  getCourseFacultiesFromDB,
+  removeCourseFacultiesFromDB,
 };
