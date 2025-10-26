@@ -8,7 +8,7 @@ import { academicFacultyValidation } from './academicFaculty_validation';
 const router = express.Router();
 router.post(
   '/createAcademicFaculty',
-  auth(USER_ROLE.super_admin),
+  auth(USER_ROLE.super_admin, USER_ROLE.admin),
   validateRequest(academicFacultyValidation),
   academicFacultyController.createAcademicFaculty,
 );
@@ -16,6 +16,7 @@ router.get('/', academicFacultyController.getAllAcademicFaculties);
 router.get('/:id', academicFacultyController.getAnAcademicFaculty);
 router.patch(
   '/:id',
+  auth(USER_ROLE.super_admin, USER_ROLE.admin),
   validateRequest(academicFacultyValidation),
   academicFacultyController.updateAnAcademicFaculty,
 );
