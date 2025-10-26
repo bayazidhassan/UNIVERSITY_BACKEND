@@ -171,6 +171,10 @@ const assignCourseFacultiesIntoDB = async (
   courseId: string,
   facultiesData: Partial<TCourseFaculties>,
 ) => {
+  const isCourseExists = await Course.findById(courseId);
+  if (!isCourseExists) {
+    throw new AppError(status.NOT_FOUND, 'Course is not found.');
+  }
   const result = await CourseFaculties.findByIdAndUpdate(
     courseId,
     {
