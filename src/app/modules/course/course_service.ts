@@ -190,8 +190,8 @@ const assignCourseFacultiesIntoDB = async (
 
 const getCourseFacultiesFromDB = async (courseId: string) => {
   const result = await CourseFaculties.findOne({ course: courseId })
-    .populate('course')
-    .populate('faculties');
+    .populate('course', 'title -_id')
+    .populate('faculties', 'name email contactNo -_id');
   if (!result) {
     throw new AppError(status.NOT_FOUND, 'Not found.');
   }
