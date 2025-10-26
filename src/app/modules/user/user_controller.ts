@@ -45,7 +45,13 @@ const createStudent: RequestHandler = async (req, res, next) => {
 
 const createFaculty = catchAsync(async (req, res) => {
   const { password, faculty: facultyData } = req.body;
-  const result = await userServices.createFacultyIntoDB(password, facultyData);
+  const file = req.file as Express.Multer.File;
+
+  const result = await userServices.createFacultyIntoDB(
+    file,
+    password,
+    facultyData,
+  );
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
@@ -56,7 +62,13 @@ const createFaculty = catchAsync(async (req, res) => {
 
 const createAdmin = catchAsync(async (req, res) => {
   const { password, admin: adminData } = req.body;
-  const result = await userServices.createAdminIntoDB(password, adminData);
+  const file = req.file as Express.Multer.File;
+
+  const result = await userServices.createAdminIntoDB(
+    file,
+    password,
+    adminData,
+  );
   sendResponse(res, {
     statusCode: status.OK,
     success: true,

@@ -65,7 +65,8 @@ const adminSchema = new Schema<TAdmin, adminModel>( //for  custom static method
     },
     profileImg: {
       type: String,
-      required: [true, 'Profile image is required'],
+      //required: [true, 'Profile image is required'],
+      default: '',
     },
     isDeleted: { type: Boolean, default: false },
   },

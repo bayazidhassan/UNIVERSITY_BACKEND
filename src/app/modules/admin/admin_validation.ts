@@ -80,12 +80,14 @@ const createAdminZodSchema = z.object({
           ? 'Permanent address is required.'
           : 'Permanent address must be a string.',
     }),
+    /*
     profileImg: z.string({
       error: (ctx) =>
         ctx.input === undefined
           ? 'Profile image link is required.'
           : 'Profile image link must be a string.',
     }),
+    */
   }),
 });
 
@@ -172,6 +174,7 @@ const updateAdminZodSchema = z.object({
             : 'Permanent address must be a string.',
       })
       .optional(),
+    /*
     profileImg: z
       .string({
         error: (ctx) =>
@@ -180,6 +183,7 @@ const updateAdminZodSchema = z.object({
             : 'Profile image link must be a string.',
       })
       .optional(),
+    */
   }),
 });
 

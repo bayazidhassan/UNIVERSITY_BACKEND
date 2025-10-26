@@ -12,7 +12,7 @@ import { TFaculty } from '../faculty/faculty_interface';
 import { Faculty } from '../faculty/faculty_schema_model';
 import { TStudent } from '../student/student_interface';
 import { Student } from '../student/student_schema_model';
-import { TStatus, TUser } from './user_interface';
+import { TStatus, TUser, USER_ROLE } from './user_interface';
 import { User } from './user_schema_model';
 import {
   generateAdminId,
@@ -95,10 +95,12 @@ const createStudentIntoDB = async (
 
     /*
     //to do not send password field in the returned doc
+    //const newUserResult: Partial<TUser> = userResult.toObject(); //for without transaction operation
     const newUserResult: Partial<TUser> = userResult[0].toObject();
     delete newUserResult.password;
     */
 
+    //create a student (transaction-2)
     //upload image to cloudinary
     if (file) {
       const imageTitle = `${studentData.name.firstName}-${validateUserData.id}`;
@@ -106,14 +108,12 @@ const createStudentIntoDB = async (
       const image_link = await sendImageToCloudinary(imageTitle, path);
       studentData.profileImg = image_link;
     }
-
     //studentData.id = userResult.id;
     //studentData.user = userResult._id;
     studentData.id = userResult[0].id;
     studentData.user = userResult[0]._id;
     studentData.academicFaculty = isAcademicDepartmentExists.academicFaculty;
 
-    //create a student (transaction-2)
     //const studentResult = await Student.create(studentData); //Note: The create() function fires save() hooks.
     //But note: during create(), select: false doesn’t automatically hide password in the returned doc — you’ll still see it unless you convert the doc and strip it.
     const studentResult = await Student.create([studentData], { session }); //Note: The create() function fires save() hooks.
@@ -143,7 +143,11 @@ const createStudentIntoDB = async (
   }
 };
 
-const createFacultyIntoDB = async (password: string, facultyData: TFaculty) => {
+const createFacultyIntoDB = async (
+  file: Express.Multer.File,
+  password: string,
+  facultyData: TFaculty,
+) => {
   const user: Partial<TUser> = {
     id: await generateFacultyId(),
     email: facultyData.email,
@@ -168,6 +172,13 @@ const createFacultyIntoDB = async (password: string, facultyData: TFaculty) => {
     }
 
     //create a faculty(Transaction-2)
+    //upload image to cloudinary
+    if (file) {
+      const imageTitle = `${facultyData.name.firstName}-${validateUser.id}`;
+      const path = file?.path;
+      const image_link = await sendImageToCloudinary(imageTitle, path);
+      facultyData.profileImg = image_link;
+    }
     facultyData.id = userResult[0].id;
     facultyData.user = userResult[0]._id;
 
@@ -191,7 +202,11 @@ const createFacultyIntoDB = async (password: string, facultyData: TFaculty) => {
   }
 };
 
-const createAdminIntoDB = async (password: string, adminData: TAdmin) => {
+const createAdminIntoDB = async (
+  file: Express.Multer.File,
+  password: string,
+  adminData: TAdmin,
+) => {
   const user: Partial<TUser> = {
     id: await generateAdminId(),
     email: adminData.email,
@@ -216,6 +231,13 @@ const createAdminIntoDB = async (password: string, adminData: TAdmin) => {
     }
 
     //create a admin(Transaction-2)
+    //upload image to cloudinary
+    if (file) {
+      const imageTitle = `${adminData.name.firstName}-${validateUser.id}`;
+      const path = file?.path;
+      const image_link = await sendImageToCloudinary(imageTitle, path);
+      adminData.profileImg = image_link;
+    }
     adminData.id = userResult[0].id;
     adminData.user = userResult[0]._id;
 
@@ -240,13 +262,13 @@ const createAdminIntoDB = async (password: string, adminData: TAdmin) => {
 
 const getMeFromDB = async (payload: JwtDecoded) => {
   let result = null;
-  if (payload.data.role === 'student') {
+  if (payload.data.role === USER_ROLE.student) {
     result = await Student.findOne({ id: payload.data.userId });
   }
-  if (payload.data.role === 'faculty') {
+  if (payload.data.role === USER_ROLE.faculty) {
     result = await Faculty.findOne({ id: payload.data.userId });
   }
-  if (payload.data.role === 'admin') {
+  if (payload.data.role === USER_ROLE.admin) {
     result = await Admin.findOne({ id: payload.data.userId });
   }
   return result;
