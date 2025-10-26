@@ -175,12 +175,11 @@ const assignCourseFacultiesIntoDB = async (
     courseId,
     {
       course: courseId,
-      $addToSet: { faculties: { $each: facultiesData } },
+      $addToSet: { faculties: { $each: facultiesData } }, //$addToSet->Add unique values (no duplicates) | add the faculties if they’re not already there
     },
     {
-      upsert: true,
-      new: true,
-      //runValidators: true,
+      upsert: true, //Update if the document exists; insert a new one if it doesn’t.
+      new: true, //Return the updated (or newly created) document
     },
   );
   if (!result) {
