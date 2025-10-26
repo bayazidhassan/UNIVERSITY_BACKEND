@@ -190,6 +190,7 @@ const createFacultyIntoDB = async (
     }
     facultyData.id = userResult[0].id;
     facultyData.user = userResult[0]._id;
+    facultyData.academicFaculty = isAcademicDepartmentExists.academicFaculty;
 
     const facultyResult = await Faculty.create([facultyData], { session });
     if (!facultyResult.length) {
