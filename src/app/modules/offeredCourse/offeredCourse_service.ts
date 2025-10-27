@@ -165,7 +165,7 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
     throw new AppError(status.NOT_FOUND, 'There is no ongoing semester.');
   }
 
-  //1. showed by PH video
+  //Technique:1 - showed by PH video
   /*
   const result = await OfferedCourse.aggregate([
     //stage:1 - Get all courses offered by my department in the current ongoing semester.
@@ -218,9 +218,57 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
         as: 'enrolledCourses', //output array name
       },
     },
-    //stage:5 - Compare offered courses with the student's enrolledCourses and flag those already enrolled (isAlreadyEnrolled = true)
+    //stage:5 - Find all completed courses for this student
+    {
+      $lookup: {
+        from: 'enrolledcourses', //collection name (lowercase plural)
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: ['$student', isStudentExists._id],
+                  },
+                  {
+                    $eq: ['$isCompleted', true],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: 'completedCourses', //output array name
+      },
+    },
+    //stage:6 - get completed courses IDs
     {
       $addFields: {
+        completedCourseIDs: {
+          $map: {
+            input: '$completedCourses', // as: 'completedCourses'
+            as: 'completed',
+            in: '$$completed.course', //as: 'completed'
+          },
+        },
+      },
+    },
+    //stage:7 - Compare offered courses with the student's enrolledCourses and flag those already enrolled (isAlreadyEnrolled = true)
+    {
+      $addFields: {
+        isPreRequisitesFulFilled: {
+          $or: [
+            {
+              $eq: ['$course.preRequisiteCourses', []],
+            },
+            {
+              $setIsSubset: [
+                '$course.preRequisiteCourses.course',
+                '$completedCourseIDs',
+              ],
+            },
+          ],
+        },
         isAlreadyEnrolled: {
           $in: [
             '$course._id',
@@ -235,10 +283,12 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
         },
       },
     },
-    //stage:6 - Return only those offered courses that the student has not enrolled in yet
+    //stage:7 - Return only those offered courses that the student has not enrolled in yet
+    //and these courses have no prerequisite course/courses or they are already completed(isCompleted:true)
     {
       $match: {
         isAlreadyEnrolled: false,
+        isPreRequisitesFulFilled: true,
       },
     },
   ]);
@@ -250,16 +300,18 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
   return result;
   */
 
-  //2. Disadvantage: Slightly less efficient if you have huge datasets (because filtering happens in Node.js)
+  //Technique:2
+  //Disadvantage: Slightly less efficient if you have huge datasets (because filtering happens in Node.js)
+  //Advantage: cleaner & more readable (TypeScript-friendly)
   /*
-  //1. Get all offered courses for current semester & department
+  //1. Get all offered courses for the student's department in the current ongoing semester
   const offeredCourses = await OfferedCourse.find({
     semesterRegistration: currentOngoingRegistrationSemester._id,
     academicFaculty: isStudentExists.academicFaculty,
     academicDepartment: isStudentExists.academicDepartment,
   }).populate('course');
 
-  //2. Get IDs of enrolled courses for this student
+  //2. Get IDs of courses the student is currently enrolled in
   const enrolled = await EnrolledCourse.find(
     {
       student: isStudentExists._id,
@@ -270,37 +322,68 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
   );
   const enrolledCourseIds = enrolled.map((c) => c.course.toString());
 
-  //3. Filter out already enrolled courses
-  const notEnrolledCourses = offeredCourses.filter(
-    (offeredCourse) =>
-      !enrolledCourseIds.includes(offeredCourse.course._id.toString()),
+  //3. Get IDs of courses the student has already completed
+  const completed = await EnrolledCourse.find(
+    {
+      student: isStudentExists._id,
+      isCompleted: true,
+    },
+    { _id: 0, course: 1 },
   );
+  const completedCourseIds = completed.map((c) => c.course.toString());
 
-  if (!notEnrolledCourses.length) {
+  //4. Filter out courses that are already enrolled AND check prerequisite completion
+  const availableCourses = offeredCourses.filter((offeredCourse) => {
+    const courseId = offeredCourse.course._id.toString();
+    const course = offeredCourse.course as unknown as TCourse;
+    const preReqs = course.preRequisiteCourses || [];
+
+    //Condition 1: Student is NOT already enrolled
+    const notEnrolled = !enrolledCourseIds.includes(courseId);
+
+    //Condition 2: Either no prerequisites OR all prerequisites are completed
+    const prerequisitesFulfilled =
+      preReqs.length === 0 ||
+      preReqs.every((pr) => completedCourseIds.includes(pr.course.toString()));
+
+    return notEnrolled && prerequisitesFulfilled;
+  });
+
+  if (!availableCourses.length) {
     throw new AppError(status.NOT_FOUND, 'Offered courses are not found.');
   }
-  return notEnrolledCourses;
+  return availableCourses;
   */
 
-  //3. Advantage: Efficient than option 2
+  //Technique:3 - Advantage: faster & more efficient (database does the heavy work)
+  //Step 1 — Get all enrolled course IDs for this student in the current semester
   const enrolledCourses = await EnrolledCourse.find({
     student: isStudentExists._id,
     semesterRegistration: currentOngoingRegistrationSemester._id,
     isEnrolled: true,
   }).select('course');
-  const enrolledCourseIds = enrolledCourses.map((c) => c.course);
+  const enrolledCourseIds = enrolledCourses.map((e) => e.course);
 
+  //Step 2 — Get all completed course IDs for this student
+  const completedCourses = await EnrolledCourse.find({
+    student: isStudentExists._id,
+    isCompleted: true,
+  }).select('course');
+  const completedCourseIds = completedCourses.map((c) => c.course);
+
+  //Step 3 — Find offered courses where the student is eligible to enroll
   const result = await OfferedCourse.aggregate([
+    //stage:1 - Get all courses offered by the student's department in the current ongoing semester
     {
       $match: {
         semesterRegistration: currentOngoingRegistrationSemester._id,
         academicFaculty: isStudentExists.academicFaculty,
         academicDepartment: isStudentExists.academicDepartment,
-        course: { $nin: enrolledCourseIds }, //exclude enrolled courses
+        course: { $nin: enrolledCourseIds }, //exclude already enrolled courses
       },
     },
+    //stage:2 - Populate course details from the 'courses' collection
     {
-      //populate
       $lookup: {
         from: 'courses', //collection name (lowercase plural)
         localField: 'course', // field in OfferedCourse
@@ -310,6 +393,26 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
     },
     //Break the 'course' array into separate documents using $unwind.
     { $unwind: '$course' }, //as: 'course'
+    //stage:3 - Check whether prerequisite course/courses are completed
+    {
+      $addFields: {
+        isPreRequisitesFulfilled: {
+          $or: [
+            { $eq: ['$course.preRequisiteCourses', []] }, //no prerequisites
+            {
+              $setIsSubset: [
+                '$course.preRequisiteCourses.course', //required courses
+                completedCourseIds, //completed courses
+              ],
+            },
+          ],
+        },
+      },
+    },
+    //stage:4 - Keep only courses whose prerequisites are fulfilled
+    {
+      $match: { isPreRequisitesFulfilled: true },
+    },
   ]);
 
   if (!result.length) {

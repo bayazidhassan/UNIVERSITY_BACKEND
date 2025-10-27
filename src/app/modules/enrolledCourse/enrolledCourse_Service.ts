@@ -40,8 +40,9 @@ const createEnrolledCourseIntoDB = async (
   }
 
   //check a student's total enrolled courses credits+new offered course credits > maxCredit for a specific semester registration
+  //showed by PH video
   /*
-  const total_enrolledCourse2 = await EnrolledCourse.aggregate([
+  const total_enrolledCourse = await EnrolledCourse.aggregate([
     {
       $match: {
         semesterRegistration: isOfferedCourseExists.semesterRegistration,
@@ -69,25 +70,26 @@ const createEnrolledCourseIntoDB = async (
       $project: { _id: 0, totalEnrolledCredits: 1 },
     },
   ]);
-  const total_credits2 = total_enrolledCourse2.length
-    ? total_enrolledCourse2[0].totalEnrolledCredits
+  const total_credits = total_enrolledCourse.length
+    ? total_enrolledCourse[0].totalEnrolledCredits
     : 0;
-  const semesterRegistration2 = await SemesterRegistration.findById(
+  const semesterRegistration = await SemesterRegistration.findById(
     isOfferedCourseExists.semesterRegistration,
     {
       _id: 0,
       maxCredit: 1,
     },
   );
-  const maxCredit2 = semesterRegistration2?.maxCredit ?? 0; //nullish coalescing operator
+  const maxCredit = semesterRegistration?.maxCredit ?? 0; //nullish coalescing operator
   const course = await Course.findById(isOfferedCourseExists.course, {
     _id: 0,
     credits: 1,
   });
-  if (total_credits2 + course?.credits > maxCredit2) {
+  if (total_credits + course?.credits > maxCredit) {
     throw new AppError(status.BAD_REQUEST, 'Credit limit exceeded.');
   }
   */
+
   const total_enrolledCourse = (
     await EnrolledCourse.find(
       {
