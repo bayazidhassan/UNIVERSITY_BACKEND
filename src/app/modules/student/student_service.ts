@@ -190,12 +190,11 @@ const getAStudentFromDB = async (id: string) => {
   }
   return result;
   */
-
   /*
-  ->You can’t use .populate() directly after .aggregate() in Mongoose — that only works with find-type queries.
-  ->When you run an aggregation, Mongoose gives you plain JavaScript objects, not full Mongoose documents, so populate() doesn’t automatically work unless you call it in a different way.
-  ->Instead of chaining .populate() after aggregate(), you pass the aggregation result into Model.populate():
-  */
+  //You can’t use .populate() directly after .aggregate() in Mongoose — that only works with find-type queries.
+  //When you run an aggregation, Mongoose gives you plain JavaScript objects, not full Mongoose documents, so populate() doesn’t automatically work unless you call it in a different way.
+  //Instead of chaining .populate() after aggregate(), you pass the aggregation result into Model.populate():
+  
   const result = await Student.aggregate([{ $match: { id: id } }]);
   const populatedResult = await Student.populate(result, [
     { path: 'user' },
@@ -209,6 +208,53 @@ const getAStudentFromDB = async (id: string) => {
     throw new Error('Student is not found!');
   }
   return populatedResult;
+  */
+
+  const result = await Student.aggregate([
+    //stage:1 - Find the student by ID
+    {
+      $match: { id: id },
+    },
+
+    //stage:2 - populate admissionSemester
+    {
+      $lookup: {
+        from: 'academicsemesters', //collection name (lowercase plural)
+        localField: 'admissionSemester', // field in Student
+        foreignField: '_id', //field in AcademicSemester
+        as: 'admissionSemester', //output array name
+      },
+    },
+    //Break the 'admissionSemester' array into separate documents using $unwind.
+    { $unwind: '$admissionSemester' }, //as: 'admissionSemester'
+
+    //stage:3 - populate academicDepartment
+    {
+      $lookup: {
+        from: 'academicdepartments',
+        localField: 'academicDepartment',
+        foreignField: '_id',
+        as: 'academicDepartment',
+      },
+    },
+    { $unwind: '$academicDepartment' },
+
+    //stage:4 - populate academicFaculty
+    {
+      $lookup: {
+        from: 'academicfaculties',
+        localField: 'academicFaculty',
+        foreignField: '_id',
+        as: 'academicFaculty',
+      },
+    },
+    { $unwind: '$academicFaculty' },
+  ]);
+
+  if (result.length === 0) {
+    throw new Error('Student is not found!');
+  }
+  return result;
 };
 
 const updateAStudentIntoDB = async (
