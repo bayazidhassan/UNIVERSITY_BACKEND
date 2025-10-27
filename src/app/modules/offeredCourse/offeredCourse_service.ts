@@ -413,6 +413,10 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
     {
       $match: { isPreRequisitesFulfilled: true },
     },
+    //stage:8 - Exclude helper fields from final output
+    {
+      $project: { isPreRequisitesFulfilled: 0 },
+    },
   ]);
 
   if (!result.length) {
