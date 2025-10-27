@@ -4,6 +4,7 @@ import AppError from '../../errors/AppError';
 import { AcademicDepartment } from '../academicDepartment/academicDepartment_schema_model';
 import { AcademicFaculty } from '../academicFaculty/academicFaculty_schema_model';
 import { Course } from '../course/course_schema_model';
+import { EnrolledCourse } from '../enrolledCourse/enrolledCourse_Model';
 import { Faculty } from '../faculty/faculty_schema_model';
 import { SemesterRegistration } from '../semesterRegistration/semesterRegistration_schema_model';
 import { Student } from '../student/student_schema_model';
@@ -164,8 +165,10 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
     throw new AppError(status.NOT_FOUND, 'There is no ongoing semester.');
   }
 
+  //1. showed by PH video
+  /*
   const result = await OfferedCourse.aggregate([
-    //stage:1 - get offered courses for my department in current ongoing semester
+    //stage:1 - Get all courses offered by my department in the current ongoing semester.
     {
       $match: {
         semesterRegistration: currentOngoingRegistrationSemester._id,
@@ -173,9 +176,8 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
         academicDepartment: isStudentExists.academicDepartment,
       },
     },
-    //stage:2 - populate course data
+    //stage:2 - Use $lookup to join the 'courses' collection (acts like populate)
     {
-      //lookup->populate
       $lookup: {
         from: 'courses', //collection name (lowercase plural)
         localField: 'course', // field in OfferedCourse
@@ -183,12 +185,11 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
         as: 'course', //output array name
       },
     },
-    //stage:3 - break the course array [as: 'course' -> it returns an array]
+    //stage:3 - Break the 'course' array into separate documents using $unwind.
     {
-      //unwind->break array
-      $unwind: '$course',
+      $unwind: '$course', //as: 'course'
     },
-    //stage:4 - get my enrolled courses
+    //stage:4 - Find all enrolled course documents for this student in the current ongoing semester (only where isEnrolled is true)
     {
       $lookup: {
         from: 'enrolledcourses', //collection name (lowercase plural)
@@ -214,10 +215,10 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
             },
           },
         ],
-        as: 'enrolledCourses', //it creates an array
+        as: 'enrolledCourses', //output array name
       },
     },
-    //stage:5 - compare all offered courses with enrolled courses
+    //stage:5 - Compare offered courses with the student's enrolledCourses and flag those already enrolled (isAlreadyEnrolled = true)
     {
       $addFields: {
         isAlreadyEnrolled: {
@@ -234,12 +235,81 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
         },
       },
     },
-    //stage:6 - check isAlreadyEnrolled is equal to false
+    //stage:6 - Return only those offered courses that the student has not enrolled in yet
     {
       $match: {
         isAlreadyEnrolled: false,
       },
     },
+  ]);
+
+  if (!result.length) {
+    throw new AppError(status.NOT_FOUND, 'Offered courses are not found.');
+  }
+
+  return result;
+  */
+
+  //2. Disadvantage: Slightly less efficient if you have huge datasets (because filtering happens in Node.js)
+  /*
+  //1. Get all offered courses for current semester & department
+  const offeredCourses = await OfferedCourse.find({
+    semesterRegistration: currentOngoingRegistrationSemester._id,
+    academicFaculty: isStudentExists.academicFaculty,
+    academicDepartment: isStudentExists.academicDepartment,
+  }).populate('course');
+
+  //2. Get IDs of enrolled courses for this student
+  const enrolled = await EnrolledCourse.find(
+    {
+      student: isStudentExists._id,
+      semesterRegistration: currentOngoingRegistrationSemester._id,
+      isEnrolled: true,
+    },
+    { _id: 0, course: 1 },
+  );
+  const enrolledCourseIds = enrolled.map((c) => c.course.toString());
+
+  //3. Filter out already enrolled courses
+  const notEnrolledCourses = offeredCourses.filter(
+    (offeredCourse) =>
+      !enrolledCourseIds.includes(offeredCourse.course._id.toString()),
+  );
+
+  if (!notEnrolledCourses.length) {
+    throw new AppError(status.NOT_FOUND, 'Offered courses are not found.');
+  }
+  return notEnrolledCourses;
+  */
+
+  //3. Advantage: Efficient than option 2
+  const enrolledCourses = await EnrolledCourse.find({
+    student: isStudentExists._id,
+    semesterRegistration: currentOngoingRegistrationSemester._id,
+    isEnrolled: true,
+  }).select('course');
+  const enrolledCourseIds = enrolledCourses.map((c) => c.course);
+
+  const result = await OfferedCourse.aggregate([
+    {
+      $match: {
+        semesterRegistration: currentOngoingRegistrationSemester._id,
+        academicFaculty: isStudentExists.academicFaculty,
+        academicDepartment: isStudentExists.academicDepartment,
+        course: { $nin: enrolledCourseIds }, //exclude enrolled courses
+      },
+    },
+    {
+      //populate
+      $lookup: {
+        from: 'courses', //collection name (lowercase plural)
+        localField: 'course', // field in OfferedCourse
+        foreignField: '_id', //field in Course
+        as: 'course', //output array name
+      },
+    },
+    //Break the 'course' array into separate documents using $unwind.
+    { $unwind: '$course' }, //as: 'course'
   ]);
 
   if (!result.length) {
