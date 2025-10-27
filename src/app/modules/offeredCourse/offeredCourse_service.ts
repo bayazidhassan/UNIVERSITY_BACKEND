@@ -149,7 +149,16 @@ const getAllOfferedCoursesFromDB = async (query: Record<string, unknown>) => {
   };
 };
 
-const getMyOfferedCoursesFromDB = async (userId: string) => {
+const getMyOfferedCoursesFromDB = async (
+  query: Record<string, unknown>,
+  userId: string,
+) => {
+  //pagination setup
+  const page = Number(query?.page) || 1;
+  const limit = Number(query?.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  //check student is exists or not
   const isStudentExists = await Student.findOne({ id: userId });
   if (!isStudentExists) {
     throw new AppError(status.NOT_FOUND, 'Student is not found.');
@@ -372,7 +381,7 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
   const completedCourseIds = completedCourses.map((c) => c.course);
 
   //Step 3 — Find offered courses where the student is eligible to enroll
-  const result = await OfferedCourse.aggregate([
+  const aggregateQuery = [
     //stage:1 - Get all courses offered by the student's department in the current ongoing semester
     {
       $match: {
@@ -413,16 +422,42 @@ const getMyOfferedCoursesFromDB = async (userId: string) => {
     {
       $match: { isPreRequisitesFulfilled: true },
     },
-    //stage:8 - Exclude helper fields from final output
+    //stage:5 - Exclude helper fields from final output
     {
       $project: { isPreRequisitesFulfilled: 0 },
     },
+  ];
+  const paginationQuery = [
+    //for pagination
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+  ];
+  const result = await OfferedCourse.aggregate([
+    ...aggregateQuery,
+    ...paginationQuery,
   ]);
 
   if (!result.length) {
     throw new AppError(status.NOT_FOUND, 'Offered courses are not found.');
   }
-  return result;
+
+  const total = (await OfferedCourse.aggregate(aggregateQuery)).length;
+  const totalPage = Math.ceil(result.length / limit);
+  const meta = {
+    page,
+    limit,
+    total,
+    totalPage,
+  };
+
+  return {
+    meta,
+    result,
+  };
 };
 
 const getSingleOfferedCourseFromDB = async (id: string) => {
