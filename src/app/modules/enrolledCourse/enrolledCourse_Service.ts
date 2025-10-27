@@ -209,9 +209,15 @@ const updateEnrolledCourseMarksIntoDB = async (
   if (courseMarks?.finalTerm) {
     const { classTest1, midTerm, classTest2 } =
       isEnrolledCourseExists.courseMarks;
-    const total_Marks =
-      classTest1 + midTerm + classTest2 + courseMarks.finalTerm;
+
+    const c1 = classTest1 ? classTest1 : courseMarks.classTest1;
+    const mid = midTerm ? midTerm : courseMarks.midTerm;
+    const c2 = classTest2 ? classTest2 : courseMarks.classTest2;
+
+    const total_Marks = c1 + mid + c2 + courseMarks.finalTerm;
+
     const result = calculateGradeAndPoints(total_Marks);
+
     modifiedData.grade = result.grade;
     modifiedData.gradePoints = result.gradePoints;
     modifiedData.isCompleted = true;
