@@ -470,12 +470,26 @@ const getMyEnrolledCoursesFromDB = async (
     throw new AppError(status.NOT_FOUND, 'Student is not found.');
   }
 
+  const myEnrolledCoursesSearchableFields = ['grade'];
+
   const myEnrolledCoursesQuery = new QueryBuilder(
     EnrolledCourse.find({ student: isStudentExists._id }).populate(
       'semesterRegistration academicSemester academicFaculty academicDepartment offeredCourse course student faculty',
     ),
     query,
   );
+
+  myEnrolledCoursesQuery
+    .search(myEnrolledCoursesSearchableFields)
+    .filter()
+    .sort();
+  if (query?.page) {
+    myEnrolledCoursesQuery.paginate();
+  }
+  myEnrolledCoursesQuery.fieldsLimiting();
+
+  const result = await myEnrolledCoursesQuery.modelQuery;
+  const meta = await myEnrolledCoursesQuery.countTotal();
 
   return {
     meta,
