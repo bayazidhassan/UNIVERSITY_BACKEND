@@ -18,7 +18,7 @@ app.use(cookieParser());
 app.use('/api/v1', router);
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello Bayazid!');
+  res.send('University Backend server is running...!');
 
   //for detect UnhandledPromiseRejection
   //Promise.reject();
