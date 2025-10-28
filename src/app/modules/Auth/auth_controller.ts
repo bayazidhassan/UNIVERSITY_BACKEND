@@ -13,7 +13,17 @@ const loginUser = catchAsync(async (req, res) => {
   res.cookie('refreshToken', jwt_refreshToken, {
     secure: config.node_env === 'production', //check it is in development or production mode, for production it will be secure(true)
     httpOnly: true, //it will not be modified by javascript
+    sameSite: 'none',
+    maxAge: 1000 * 60 * 60 * 24 * 1, //1 day
   });
+  /*
+  refresh token does not work on any free hosting(vercel,netlify)
+  use paid hosting->digital ocean, aws
+  7 days → 1000 * 60 * 60 * 24 * 7
+  30 days → 1000 * 60 * 60 * 24 * 30
+  1 year → 1000 * 60 * 60 * 24 * 365
+  1 hour → 1000 * 60 * 60
+  */
 
   sendResponse(res, {
     statusCode: status.OK,
