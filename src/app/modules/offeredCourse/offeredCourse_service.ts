@@ -174,7 +174,7 @@ const getMyOfferedCoursesFromDB = async (
     throw new AppError(status.NOT_FOUND, 'There is no ongoing semester.');
   }
 
-  //Technique:1 - showed by PH video
+  //Technique:1 - showed by PH video (21:9 - 21:13) [pagination not setup here]
   /*
   const result = await OfferedCourse.aggregate([
     //stage:1 - Get all courses offered by my department in the current ongoing semester.
@@ -309,7 +309,7 @@ const getMyOfferedCoursesFromDB = async (
   return result;
   */
 
-  //Technique:2
+  //Technique:2 [pagination not setup here]
   //Disadvantage: Slightly less efficient if you have huge datasets (because filtering happens in Node.js)
   //Advantage: cleaner & more readable (TypeScript-friendly)
   /*
@@ -460,6 +460,29 @@ const getMyOfferedCoursesFromDB = async (
   };
 };
 
+const getMyEnrolledCoursesFromDB = async (
+  query: Record<string, unknown>,
+  userId: string,
+) => {
+  //check student is exists or not
+  const isStudentExists = await Student.findOne({ id: userId });
+  if (!isStudentExists) {
+    throw new AppError(status.NOT_FOUND, 'Student is not found.');
+  }
+
+  const myEnrolledCoursesQuery = new QueryBuilder(
+    EnrolledCourse.find({ student: isStudentExists._id }).populate(
+      'semesterRegistration academicSemester academicFaculty academicDepartment offeredCourse course student faculty',
+    ),
+    query,
+  );
+
+  return {
+    meta,
+    result,
+  };
+};
+
 const getSingleOfferedCourseFromDB = async (id: string) => {
   const result = await OfferedCourse.findById(id)
     .populate('semesterRegistration')
@@ -561,6 +584,7 @@ export const offeredCourseService = {
   createOfferedCourseIntoDB,
   getAllOfferedCoursesFromDB,
   getMyOfferedCoursesFromDB,
+  getMyEnrolledCoursesFromDB,
   getSingleOfferedCourseFromDB,
   updateOfferedCourseIntoDB,
   deleteAOfferedCourseFromDB,

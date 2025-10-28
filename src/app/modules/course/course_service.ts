@@ -36,11 +36,17 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
     courseQuery.paginate();
   }
   courseQuery.fieldsLimiting();
+
   const result = await courseQuery.modelQuery;
+  const meta = await courseQuery.countTotal();
+
   if (!result.length) {
     throw new AppError(status.NOT_FOUND, 'No course found.');
   }
-  return result;
+  return {
+    meta,
+    result,
+  };
 };
 
 const getACourseFromDB = async (id: string) => {
