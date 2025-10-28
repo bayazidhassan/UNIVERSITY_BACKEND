@@ -26,12 +26,7 @@ const getAllFacultiesFromDB = async (query: Record<string, unknown>) => {
   ];
 
   const facultyQuery = new QueryBuilder(
-    Faculty.find().populate({
-      path: 'academicDepartment',
-      populate: {
-        path: 'academicFaculty',
-      },
-    }),
+    Faculty.find().populate('academicDepartment academicFaculty'),
     query,
   );
 
@@ -51,12 +46,9 @@ const getAllFacultiesFromDB = async (query: Record<string, unknown>) => {
 };
 
 const getAFacultyFromDB = async (facultyId: string) => {
-  const result = await Faculty.findOne({ id: facultyId }).populate({
-    path: 'academicDepartment',
-    populate: {
-      path: 'academicFaculty',
-    },
-  });
+  const result = await Faculty.findOne({ id: facultyId }).populate(
+    'academicDepartment academicFaculty',
+  );
 
   if (!result) {
     throw new AppError(status.NOT_FOUND, 'Faculty is not found.');

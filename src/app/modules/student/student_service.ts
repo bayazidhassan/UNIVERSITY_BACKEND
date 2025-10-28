@@ -69,12 +69,8 @@ const getAllStudentFromDB = async (query: Record<string, unknown>) => {
     .find(queryObj)
     .populate('user')
     .populate('admissionSemester')
-    .populate({
-      path: 'academicDepartment',
-      populate: {
-        path: 'academicFaculty',
-      },
-    });
+    .populate('academicDepartment')
+    .populate('academicFaculty');
 
   //for sorting
   let sort = 'createdAt';
@@ -129,15 +125,13 @@ const getAllStudentFromDB = async (query: Record<string, unknown>) => {
 
   //const studentQuery = new QueryBuilder<TStudent>(Student.find(), query);
   const studentQuery = new QueryBuilder<TStudent>(
-    Student.find()
-      .populate('user')
-      .populate('admissionSemester')
-      .populate({
-        path: 'academicDepartment',
-        populate: {
-          path: 'academicFaculty',
-        },
-      }),
+    Student.find().populate(
+      'user admissionSemester academicDepartment academicFaculty',
+    ),
+    //.populate('user')
+    //.populate('admissionSemester')
+    //.populate('academicDepartment')
+    //.populate('academicFaculty'),
     query,
   );
 
@@ -151,14 +145,9 @@ const getAllStudentFromDB = async (query: Record<string, unknown>) => {
   const result = await studentQuery.modelQuery
     .populate('user')
     .populate('admissionSemester')
-    .populate({
-      path: 'academicDepartment',
-      populate: {
-        path: 'academicFaculty',
-      },
-    });
+    .populate('academicDepartment')
+    .populate('academicFaculty');
   */
-
   const result = await studentQuery.modelQuery;
 
   const meta = await studentQuery.countTotal();
@@ -179,17 +168,14 @@ const getAStudentFromDB = async (id: string) => {
   const result = await Student.findOne({ id: id })
     .populate('user')
     .populate('admissionSemester')
-    .populate({
-      path: 'academicDepartment',
-      populate: {
-        path: 'academicFaculty',
-      },
-    });
+    .populate('academicDepartment')
+    .populate('academicFaculty');
   if (!result) {
     throw new Error('Student not found.');
   }
   return result;
   */
+
   /*
   //You can’t use .populate() directly after .aggregate() in Mongoose — that only works with find-type queries.
   //When you run an aggregation, Mongoose gives you plain JavaScript objects, not full Mongoose documents, so populate() doesn’t automatically work unless you call it in a different way.
@@ -199,10 +185,8 @@ const getAStudentFromDB = async (id: string) => {
   const populatedResult = await Student.populate(result, [
     { path: 'user' },
     { path: 'admissionSemester' },
-    {
-      path: 'academicDepartment',
-      populate: { path: 'academicFaculty' },
-    },
+    { path: 'academicDepartment' },
+    { path: 'academicFaculty' },
   ]);
   if (populatedResult.length === 0) {
     throw new Error('Student is not found!');
