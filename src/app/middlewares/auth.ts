@@ -1,15 +1,15 @@
+import { RequestHandler } from 'express';
 import status from 'http-status';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import AppError from '../errors/AppError';
 import { JwtDecoded } from '../interface/jwt_tokeData_interface';
-import { User } from '../modules/user/user_schema_model';
-import catchAsync from '../utils/catchAsync';
 import { TUserRole } from '../modules/user/user_interface';
+import { User } from '../modules/user/user_schema_model';
 
 //...requiredRoles (rest parameter, must be an array type)
-const auth = (...requiredRoles: TUserRole[]) => {
-  return catchAsync(async (req, res, next) => {
+const auth = (...requiredRoles: TUserRole[]): RequestHandler => {
+  return async (req, res, next) => {
     const token = req.headers.authorization;
     //check token is given or not
     if (!token) {
@@ -17,10 +17,15 @@ const auth = (...requiredRoles: TUserRole[]) => {
     }
 
     //authentication(check token is valid or not)
-    const isVerified = jwt.verify(
-      token,
-      config.jwt_access_token as string,
-    ) as JwtDecoded;
+    let isVerified;
+    try {
+      isVerified = jwt.verify(
+        token,
+        config.jwt_access_token as string,
+      ) as JwtDecoded;
+    } catch {
+      throw new AppError(status.UNAUTHORIZED, 'Token is expired.');
+    }
 
     //check user is not found or deleted or blocked
     const isUserExists = await User.isUserExists(isVerified.data.userId); //custom static method
@@ -55,7 +60,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
     at first extend Express’ Request type so you can safely attach custom properties.
     */
     next();
-  });
+  };
 };
 
 export default auth;
