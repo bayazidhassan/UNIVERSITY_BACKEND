@@ -61,7 +61,7 @@ export const userSchema = new Schema<TUser, userModel>( //for custom static meth
 
 //document middleware/hook
 //Note: The create() function fires save() hooks.
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   //here 'this' refers to the current document
 
   /*
@@ -72,12 +72,11 @@ userSchema.pre('save', async function (next) {
   That check prevents double-hashing and ensures passwords are only hashed when they are actually changed.
   */
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
 
   const hashed = await bcrypt.hash(this.password, Number(config.bcrypt_salt));
   this.password = hashed;
-  //next(); //If you use async → don’t use next(), If you use next() → don’t use async
 });
 
 //document middleware/hook
